@@ -1,4 +1,4 @@
-import React, { useMemo, useRef } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -14,7 +14,7 @@ import type { ChartOptions } from 'chart.js';
 import annotationPlugin from 'chartjs-plugin-annotation';
 import { Line, getElementAtEvent } from 'react-chartjs-2';
 import type { ChartDataPoint, IntakeEvent } from '../types/caffeine';
-import { Activity, Plus, Edit2 } from 'lucide-react';
+import { Activity, Plus, X } from 'lucide-react';
 import { format } from 'date-fns';
 
 ChartJS.register(
@@ -36,7 +36,7 @@ interface CaffeineChartProps {
   bedTime: Date;
   onSelectEventToEdit: (event: IntakeEvent) => void;
   onSelectTimeToBrew: (time: Date) => void;
-  onEditBedTime?: () => void;
+  onFocusBedTime?: () => void;
 }
 
 export const CaffeineChart: React.FC<CaffeineChartProps> = ({
@@ -46,10 +46,18 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
   bedTime,
   onSelectEventToEdit,
   onSelectTimeToBrew,
-  onEditBedTime,
+  onFocusBedTime,
 }) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const chartRef = useRef<any>(null);
+
+  // グラフ上でタップ選択された時間と残存量の情報
+  const [selectedPointInfo, setSelectedPointInfo] = useState<{
+    time: Date;
+    timeLabel: string;
+    caffeineMg: number;
+    event?: IntakeEvent;
+  } | null>(null);
 
   const { labels, dataValues, eventAnnotations } = useMemo(() => {
     const lbls = points.map((p) => p.timeLabel);
@@ -172,49 +180,67 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
     const chart = chartRef.current;
     if (!chart) return;
 
-    // クリックされたデータ要素を取得
+    // 1. 点要素を直接クリックしたか判定
     const element = getElementAtEvent(chart, event);
-    let targetIndex = -1;
-
     if (element && element.length > 0) {
-      targetIndex = element[0].index;
-    } else {
-      // 要素直接でない場合、X座標から最も近いポイントを算出
-      const rect = chart.canvas.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const xAxis = chart.scales.x;
-      if (xAxis) {
-        const val = xAxis.getValueForPixel(x);
-        if (typeof val === 'number') {
-          targetIndex = Math.max(0, Math.min(points.length - 1, Math.round(val)));
+      const idx = element[0].index;
+      const clickedP = points[idx];
+      if (clickedP) {
+        const pointMs = clickedP.time.getTime();
+        // 厳密に一致するイベントを検索（前後5分以内）
+        const matchedEvent = events.find((e) => {
+          const evMs = new Date(e.timestamp).getTime();
+          return Math.abs(evMs - pointMs) <= 5 * 60 * 1000;
+        });
+
+        if (matchedEvent) {
+          onSelectEventToEdit(matchedEvent);
+          return;
         }
       }
     }
 
-    if (targetIndex === -1 || !points[targetIndex]) return;
+    // 2. 線や空白エリアのクリック
+    const rect = chart.canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const xAxis = chart.scales.x;
+    if (!xAxis) return;
 
+    const val = xAxis.getValueForPixel(x);
+    if (typeof val !== 'number') return;
+
+    const targetIndex = Math.max(0, Math.min(points.length - 1, Math.round(val)));
     const clickedPoint = points[targetIndex];
+    if (!clickedPoint) return;
+
     const pointMs = clickedPoint.time.getTime();
 
-    // 1. 就寝時刻マーカー近辺（15分以内）のクリック判定
+    // 就寝ライン近辺（10分以内）をクリックした場合
     const bedMs = bedTime.getTime();
-    if (Math.abs(pointMs - bedMs) <= 15 * 60 * 1000 && onEditBedTime) {
-      onEditBedTime();
+    if (Math.abs(pointMs - bedMs) <= 10 * 60 * 1000 && onFocusBedTime) {
+      onFocusBedTime();
       return;
     }
 
-    // 2. その時刻に一致する摂取イベントがあるか検索（前後15分以内）
+    // 正確に一致する既存イベントがあるか（前後5分）
     const matchedEvent = events.find((e) => {
       const evMs = new Date(e.timestamp).getTime();
-      return Math.abs(evMs - pointMs) <= 15 * 60 * 1000;
+      return Math.abs(evMs - pointMs) <= 5 * 60 * 1000;
     });
 
-    if (matchedEvent) {
-      // 既存イベントあり $\to$ 編集・削除モーダルを開く
-      onSelectEventToEdit(matchedEvent);
-    } else {
-      // イベントなし $\to$ スライダーをこの時刻に合わせてパネルへすっとスクロール
-      onSelectTimeToBrew(clickedPoint.time);
+    // 選択情報ポップアップを表示（誤タップ防止：ボタンを押して初めて移動）
+    setSelectedPointInfo({
+      time: clickedPoint.time,
+      timeLabel: format(clickedPoint.time, 'M/d(E) HH:mm'),
+      caffeineMg: clickedPoint.caffeineMg,
+      event: matchedEvent,
+    });
+  };
+
+  const handleConfirmAddAtTime = () => {
+    if (selectedPointInfo) {
+      onSelectTimeToBrew(selectedPointInfo.time);
+      setSelectedPointInfo(null);
     }
   };
 
@@ -238,9 +264,10 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
         pointRadius: (ctx: { dataIndex: number }) => {
           const pointTime = points[ctx.dataIndex]?.time?.getTime();
           if (!pointTime) return 0;
+          // イベント発生時刻の点のみ大きくプロット
           const hasEvent = events.some((e) => {
             const evTime = new Date(e.timestamp).getTime();
-            return Math.abs(evTime - pointTime) <= 7.5 * 60 * 1000;
+            return Math.abs(evTime - pointTime) <= 5 * 60 * 1000;
           });
           return hasEvent ? 6 : 0;
         },
@@ -289,12 +316,12 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
             if (!pTime) return '';
             const matched = events.filter((e) => {
               const evTime = new Date(e.timestamp).getTime();
-              return Math.abs(evTime - pTime) <= 15 * 60 * 1000;
+              return Math.abs(evTime - pTime) <= 5 * 60 * 1000;
             });
             if (matched.length > 0) {
               return matched.map((e) => `☕ ${e.name} (+${e.caffeineMg}mg) [タップで編集]`).join('\n');
             }
-            return '👉 タップしてこの時刻にコーヒーを追加';
+            return '';
           },
         },
       },
@@ -332,12 +359,11 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-3xl p-4 sm:p-5 shadow-xs border border-stone-200/90 space-y-2">
+    <div className="bg-white rounded-3xl p-4 sm:p-5 shadow-xs border border-stone-200/90 space-y-2 relative">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <Activity className="w-4 h-4 text-amber-800" />
           <h3 className="text-xs font-black text-stone-900">体内カフェイン推移</h3>
-          <span className="text-[10px] text-stone-600 hidden sm:inline">（タップして編集・時間指定追加）</span>
         </div>
         <div className="flex items-center space-x-2 text-[10px] font-bold text-stone-500">
           <span className="flex items-center">
@@ -356,17 +382,52 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
         <Line ref={chartRef} data={chartData} options={options} onClick={handleChartClick} />
       </div>
 
-      {/* グラフ下部ヘルプミニバー */}
-      <div className="flex items-center justify-between text-[11px] text-stone-600 pt-1 border-t border-stone-100">
-        <span className="flex items-center space-x-1">
-          <Edit2 className="w-3 h-3 text-amber-700" />
-          <span>丸い点をタップ：記録を編集・削除</span>
-        </span>
-        <span className="flex items-center space-x-1">
-          <Plus className="w-3 h-3 text-sky-700" />
-          <span>線をタップ：その時刻にドリンク追加</span>
-        </span>
-      </div>
+      {/* タップした位置のインタラクティブInfoバナー（誤タップ防止） */}
+      {selectedPointInfo && (
+        <div className="bg-stone-900/95 text-white p-2.5 sm:p-3 rounded-2xl flex items-center justify-between shadow-lg border border-stone-700 animate-fadeIn">
+          <div className="flex items-center space-x-2 text-xs">
+            <span className="font-mono font-black text-amber-400">{selectedPointInfo.timeLabel}</span>
+            <span className="text-stone-300">残存: {selectedPointInfo.caffeineMg}mg</span>
+            {selectedPointInfo.event && (
+              <span className="text-amber-300 font-bold">（{selectedPointInfo.event.name}）</span>
+            )}
+          </div>
+
+          <div className="flex items-center space-x-2">
+            {selectedPointInfo.event ? (
+              <button
+                type="button"
+                onClick={() => {
+                  if (selectedPointInfo.event) {
+                    onSelectEventToEdit(selectedPointInfo.event);
+                    setSelectedPointInfo(null);
+                  }
+                }}
+                className="px-2.5 py-1 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-lg transition-all"
+              >
+                編集・削除
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleConfirmAddAtTime}
+                className="px-3 py-1 bg-sky-600 hover:bg-sky-500 text-white font-black text-xs rounded-lg flex items-center space-x-1 shadow-xs transition-all active:scale-95 cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>この時間に追加</span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setSelectedPointInfo(null)}
+              className="text-stone-400 hover:text-white p-1 rounded-full"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
