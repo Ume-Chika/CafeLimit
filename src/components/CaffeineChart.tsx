@@ -41,7 +41,8 @@ interface CaffeineChartProps {
 }
 
 interface SelectedPointInfo {
-  xPx: number;
+  rawXPx: number;
+  boxXPx: number;
   yPx: number;
   time: Date;
   timeLabel: string;
@@ -236,11 +237,12 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
     const rawXPx = xAxis.getPixelForValue(targetIndex);
     const rawYPx = yAxis.getPixelForValue(targetPoint.caffeineMg);
     const chartWidth = chart.width || 320;
-    const xPx = Math.max(90, Math.min(rawXPx, chartWidth - 90));
+    const boxXPx = Math.max(95, Math.min(rawXPx, chartWidth - 95));
     const yPx = Math.max(15, rawYPx);
 
     setSelectedPointInfo({
-      xPx,
+      rawXPx,
+      boxXPx,
       yPx,
       time: targetPoint.time,
       timeLabel: format(targetPoint.time, 'M/d(E) HH:mm'),
@@ -269,11 +271,12 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
         const rawXPx = chart.scales.x.getPixelForValue(idx);
         const rawYPx = chart.scales.y.getPixelForValue(clickedP.caffeineMg);
         const chartWidth = chart.width || 320;
-        const xPx = Math.max(90, Math.min(rawXPx, chartWidth - 90));
+        const boxXPx = Math.max(95, Math.min(rawXPx, chartWidth - 95));
         const yPx = Math.max(15, rawYPx);
 
         setSelectedPointInfo({
-          xPx,
+          rawXPx,
+          boxXPx,
           yPx,
           time: clickedP.time,
           timeLabel: format(clickedP.time, 'M/d(E) HH:mm'),
@@ -389,6 +392,17 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
 
   return (
     <div className="bg-white rounded-3xl p-4 sm:p-5 shadow-xs border border-stone-200/90 space-y-2 relative">
+      {/* 吹き出し表示時の画面外タップ検知バックドロップ */}
+      {selectedPointInfo && (
+        <div
+          className="fixed inset-0 z-20 pointer-events-auto bg-transparent"
+          onClick={(e) => {
+            e.stopPropagation();
+            setSelectedPointInfo(null);
+          }}
+        />
+      )}
+
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <Activity className="w-4 h-4 text-amber-800" />
@@ -456,24 +470,42 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
           aria-label="就寝時刻 (グラフ内)"
         />
 
-        {/* グラフ内ピン留めインタラクティブ吹き出し（ドラッグ中リアルタイム追従 ＆ ボタン一体化） */}
+        {/* グラフ内ピン留めインタラクティブ吹き出し（ドラッグ中リアルタイム追従 ＆ ボタン一体化 ＆ 先端オフセット補正） */}
         {selectedPointInfo && (
           <div
             className="absolute z-30 pointer-events-auto transition-transform duration-75 ease-out animate-fadeIn"
             style={{
-              left: `${selectedPointInfo.xPx}px`,
+              left: `${selectedPointInfo.boxXPx}px`,
               top: isNearTop
                 ? `${selectedPointInfo.yPx + 12}px`
                 : `${selectedPointInfo.yPx - 10}px`,
               transform: isNearTop ? 'translate(-50%, 0)' : 'translate(-50%, -100%)',
             }}
+            onPointerDown={(e) => e.stopPropagation()}
+            onPointerMove={(e) => e.stopPropagation()}
+            onPointerUp={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
+            onTouchMove={(e) => e.stopPropagation()}
+            onTouchEnd={(e) => e.stopPropagation()}
           >
-            <div className="bg-stone-900/95 text-white text-xs rounded-2xl p-2.5 shadow-2xl border border-stone-700 min-w-[165px] max-w-[210px] backdrop-blur-md space-y-1.5 relative">
-              {/* 吹き出しのアロー */}
+            <div className="bg-stone-900/95 text-white text-xs rounded-2xl p-2.5 shadow-2xl border border-stone-700 min-w-[170px] max-w-[210px] backdrop-blur-md space-y-1.5 relative">
+              {/* 吹き出しのアロー：選択ポイントの exact X 座標へ先端を精密補正 */}
               {isNearTop ? (
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-6 border-x-transparent border-b-6 border-b-stone-900/95"></div>
+                <div
+                  className="absolute bottom-full w-0 h-0 border-x-6 border-x-transparent border-b-6 border-b-stone-900/95"
+                  style={{
+                    left: `calc(50% + ${Math.max(-75, Math.min(75, selectedPointInfo.rawXPx - selectedPointInfo.boxXPx))}px)`,
+                    transform: 'translateX(-50%)',
+                  }}
+                />
               ) : (
-                <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-6 border-x-transparent border-t-6 border-t-stone-900/95"></div>
+                <div
+                  className="absolute top-full w-0 h-0 border-x-6 border-x-transparent border-t-6 border-t-stone-900/95"
+                  style={{
+                    left: `calc(50% + ${Math.max(-75, Math.min(75, selectedPointInfo.rawXPx - selectedPointInfo.boxXPx))}px)`,
+                    transform: 'translateX(-50%)',
+                  }}
+                />
               )}
 
               {/* ヘッダー：時刻 ＆ 閉じるボタン */}
