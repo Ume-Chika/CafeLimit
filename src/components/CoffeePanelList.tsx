@@ -42,8 +42,9 @@ export const CoffeePanelList: React.FC<CoffeePanelListProps> = ({
         <span className="text-xs font-black text-stone-700">
           タップして指定時刻に追加
         </span>
-        <span className="text-[11px] text-stone-400 font-medium">
-          長押し/右上で編集
+        <span className="flex items-center space-x-0.5 text-[11px] text-stone-400 font-medium">
+          <MoreVertical className="w-3 h-3 inline-block" />
+          <span>で編集</span>
         </span>
       </div>
 
