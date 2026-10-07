@@ -1,5 +1,5 @@
-import React from 'react';
-import { Moon, Coffee, Clock } from 'lucide-react';
+import React, { useState } from 'react';
+import { Moon, Coffee, Clock, ChevronDown } from 'lucide-react';
 import type { SimulationSummary, MetabolicSpeed } from '../types/caffeine';
 import { METABOLIC_PROFILES } from '../types/caffeine';
 import { format } from 'date-fns';
@@ -12,6 +12,8 @@ interface SleepSafetyCardProps {
   onChangeMetabolicSpeed: (speed: MetabolicSpeed) => void;
 }
 
+const COMMON_BED_TIMES = ['22:00', '22:30', '23:00', '23:30', '00:00', '00:30', '01:00', '01:30', '02:00'];
+
 export const SleepSafetyCard: React.FC<SleepSafetyCardProps> = ({
   summary,
   bedTime,
@@ -20,33 +22,85 @@ export const SleepSafetyCard: React.FC<SleepSafetyCardProps> = ({
   onChangeMetabolicSpeed,
 }) => {
   const { evaluation, bedCaffeineMg, maxSafePowderGrams, deadlineFor2g } = summary;
+  const [showBedTimePicker, setShowBedTimePicker] = useState(false);
 
   // 0〜75mg を 0〜100% のゲージにマッピング
   const gaugePercent = Math.min(100, Math.max(0, (bedCaffeineMg / 75) * 100));
 
+  const handleSelectQuickBedTime = (time: string) => {
+    onChangeBedTime(time);
+    setShowBedTimePicker(false);
+  };
+
   return (
-    <div className="bg-white rounded-3xl shadow-sm border border-stone-200/90 overflow-hidden space-y-0">
+    <div id="sleep-safety-section" className="bg-white rounded-3xl shadow-sm border border-stone-200/90 overflow-hidden space-y-0">
       {/* 上部ヘッダー：設定コントロールバー */}
-      <div className="bg-[#241C18] text-stone-200 px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3">
-        {/* 就寝時刻 */}
-        <div className="flex items-center space-x-2">
-          <Moon className="w-4 h-4 text-amber-400" />
-          <span className="text-xs font-bold text-stone-300">就寝時刻</span>
-          <input
-            type="time"
-            value={bedTime}
-            onChange={(e) => onChangeBedTime(e.target.value)}
-            className="bg-stone-800 text-white font-mono font-bold text-xs px-2 py-1 rounded-lg border border-stone-700 focus:outline-none focus:ring-1 focus:ring-amber-400 cursor-pointer"
-          />
+      <div className="bg-[#241C18] text-stone-200 px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-2.5">
+        {/* 就寝時刻（タップでスマホ最適化クイックセレクターが開く） */}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setShowBedTimePicker(!showBedTimePicker)}
+            className="flex items-center space-x-2 bg-stone-800/90 hover:bg-stone-800 text-white px-3 py-1.5 rounded-xl border border-stone-700 transition-all cursor-pointer active:scale-95"
+          >
+            <Moon className="w-3.5 h-3.5 text-amber-400" />
+            <span className="text-xs text-stone-300">就寝:</span>
+            <span className="font-mono font-bold text-sm text-white">{bedTime}</span>
+            <ChevronDown className="w-3.5 h-3.5 text-stone-400" />
+          </button>
+
+          {/* スマホ最適化 就寝時刻クイックピッカー */}
+          {showBedTimePicker && (
+            <div className="absolute top-full left-0 mt-2 z-50 bg-stone-900 border border-stone-700 p-3 rounded-2xl shadow-xl w-64 space-y-2 animate-fadeIn">
+              <div className="flex items-center justify-between text-xs text-stone-400 font-bold border-b border-stone-800 pb-1.5">
+                <span>就寝予定時刻を選択</span>
+                <button
+                  type="button"
+                  onClick={() => setShowBedTimePicker(false)}
+                  className="text-stone-400 hover:text-white"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* よく使われる時刻のクイックピル */}
+              <div className="grid grid-cols-3 gap-1.5">
+                {COMMON_BED_TIMES.map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => handleSelectQuickBedTime(t)}
+                    className={`py-1 text-xs font-mono font-bold rounded-lg border transition-all ${
+                      bedTime === t
+                        ? 'bg-amber-600 text-white border-amber-500 shadow-xs'
+                        : 'bg-stone-800 text-stone-300 border-stone-700 hover:bg-stone-700'
+                    }`}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+
+              {/* カスタム時間入力 */}
+              <div className="pt-1.5 border-t border-stone-800 flex items-center justify-between">
+                <span className="text-[11px] text-stone-400">詳細指定:</span>
+                <input
+                  type="time"
+                  value={bedTime}
+                  onChange={(e) => onChangeBedTime(e.target.value)}
+                  className="bg-stone-800 text-white text-xs font-mono font-bold px-2 py-1 rounded-lg border border-stone-700 focus:outline-none"
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* 代謝体質 */}
         <div className="flex items-center space-x-2">
-          <span className="text-xs font-bold text-stone-300">代謝体質</span>
           <select
             value={metabolicSpeed}
             onChange={(e) => onChangeMetabolicSpeed(e.target.value as MetabolicSpeed)}
-            className="bg-stone-800 text-white text-xs font-bold px-2 py-1 rounded-lg border border-stone-700 focus:outline-none focus:ring-1 focus:ring-amber-400 cursor-pointer"
+            className="bg-stone-800/90 hover:bg-stone-800 text-white text-xs font-bold px-2.5 py-1.5 rounded-xl border border-stone-700 focus:outline-none cursor-pointer"
           >
             {Object.values(METABOLIC_PROFILES).map((profile) => (
               <option key={profile.type} value={profile.type}>
@@ -115,7 +169,7 @@ export const SleepSafetyCard: React.FC<SleepSafetyCardProps> = ({
           </div>
         </div>
 
-        {/* 2つの逆算インサイト（限界量 ＆ デッドライン） */}
+        {/* 2つの逆算インサイト */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
           {/* 逆算①：今飲める最大量 */}
           <div className="bg-[#FAF7F2] rounded-2xl p-3.5 border border-amber-900/10 flex items-center space-x-3">

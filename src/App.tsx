@@ -19,6 +19,7 @@ const STORAGE_KEY_SPEED = 'cafelimit_speed_v3';
 
 export default function App() {
   const panelSectionRef = useRef<HTMLDivElement>(null);
+  const sleepSectionRef = useRef<HTMLDivElement>(null);
 
   // 1. 状態管理
   const [currentTime, setCurrentTime] = useState<Date>(() => new Date());
@@ -160,11 +161,19 @@ export default function App() {
     setPresets((prev) => prev.filter((p) => p.id !== presetId));
   };
 
-  // グラフから空いている時間をタップ $\to$ スライダーを合わせてパネルへスクロール
+  // グラフから空いている時間をタップ ➔ スライダーを合わせてパネルへスクロール
   const handleSelectTimeToBrew = (time: Date) => {
     setSelectedTime(time);
     if (panelSectionRef.current) {
       panelSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  };
+
+  // グラフから就寝線をタップ ➔ 上部就寝設定へスクロール
+  const handleFocusBedTime = () => {
+    const el = document.getElementById('sleep-safety-section');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
 
@@ -200,7 +209,7 @@ export default function App() {
       {/* メインコンテンツ（流れるような縦動線） */}
       <main className="flex-1 max-w-3xl w-full mx-auto p-3.5 sm:p-5 space-y-4">
         {/* 1. 睡眠判定 ＆ 逆算カード */}
-        <section>
+        <section ref={sleepSectionRef}>
           <SleepSafetyCard
             summary={simulationSummary}
             bedTime={bedTimeStr}
@@ -219,12 +228,7 @@ export default function App() {
             bedTime={bedTimeDate}
             onSelectEventToEdit={(ev) => setEditingEvent(ev)}
             onSelectTimeToBrew={handleSelectTimeToBrew}
-            onEditBedTime={() => {
-              const input = prompt('就寝時刻を入力してください（例: 23:30）', bedTimeStr);
-              if (input && /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(input)) {
-                setBedTimeStr(input);
-              }
-            }}
+            onFocusBedTime={handleFocusBedTime}
           />
         </section>
 
