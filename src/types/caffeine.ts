@@ -3,6 +3,7 @@ export type MetabolicSpeed = 'standard' | 'fast' | 'slow' | 'custom';
 export interface MetabolicProfile {
   type: MetabolicSpeed;
   label: string;
+  shortLabel: string;
   description: string;
   halfLifeHours: number;
 }
@@ -11,25 +12,29 @@ export const METABOLIC_PROFILES: Record<MetabolicSpeed, MetabolicProfile> = {
   standard: {
     type: 'standard',
     label: '標準体質（成人平均）',
+    shortLabel: '標準 (4.0h)',
     description: '半減期 約4.0時間（一般的な成人の代謝速度）',
     halfLifeHours: 4.0,
   },
   fast: {
     type: 'fast',
     label: '速い（喫煙者・高活性）',
+    shortLabel: '速い (2.5h)',
     description: '半減期 約2.5時間（CYP1A2誘導・分解が早い）',
     halfLifeHours: 2.5,
   },
   slow: {
     type: 'slow',
     label: '遅い（敏感・低活性）',
+    shortLabel: '遅い (6.0h)',
     description: '半減期 約6.0時間（カフェインが抜けにくい・ピル服用等）',
     halfLifeHours: 6.0,
   },
   custom: {
     type: 'custom',
     label: 'カスタム設定',
-    description: '任意の半減期を指定',
+    shortLabel: 'カスタム',
+    description: '任意の半減期（1.0〜12.0時間）を指定',
     halfLifeHours: 4.0,
   },
 };
@@ -45,6 +50,7 @@ export interface BeveragePreset {
   brand?: string;
   description?: string;
   waterMl?: number;
+  volumeMl?: number;
   foamMl?: number;
   color?: string;
   isNescafeNative?: boolean;
@@ -59,6 +65,7 @@ export interface IntakeEvent {
   caffeineMg: number;
   presetId?: string;
   waterMl?: number;
+  volumeMl?: number;
   foamMl?: number;
 }
 
@@ -86,5 +93,16 @@ export interface SimulationSummary {
   totalDailyCaffeineMg: number;
   hourlyPoints: ChartDataPoint[];
   maxSafePowderGrams: number;
-  deadlineFor2g: Date;
+  maxSafeCaffeineMg: number;
+  deadlineForTarget: Date;
+  targetPresetName: string;
+}
+
+export type MaxIntakeDisplayUnit = 'powder' | 'caffeine' | 'preset';
+
+export interface AppSettings {
+  maxIntakeUnit: MaxIntakeDisplayUnit;
+  deadlinePresetId: string;
+  confirmBeforeAdd: boolean;
+  customHalfLifeHours: number;
 }

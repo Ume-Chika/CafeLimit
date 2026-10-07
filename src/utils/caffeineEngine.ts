@@ -58,21 +58,22 @@ export function evaluateSleepImpact(caffeineMg: number): SleepEvaluation {
       color: '#F59E0B', // amber-500
       bgColor: '#FFFBEB', // amber-50
       borderColor: '#FDE68A', // amber-200
-      description: 'カフェインに敏感な方は、入眠遅延や中途覚醒のリスクがあります。',
+      description: '入眠潜時の延長や中途覚醒のリスクがあります。これ以上のカフェイン摂取は控えましょう。',
     };
   }
   return {
     status: 'WARNING',
-    label: '覚醒・睡眠阻害リスク',
+    label: '覚醒警戒ゾーン（睡眠阻害）',
     color: '#EF4444', // red-500
     bgColor: '#FEF2F2', // red-50
     borderColor: '#FECACA', // red-200
-    description: '深睡眠の減少や覚醒リスクが高まります。これ以上の摂取は控えましょう。',
+    description: 'アデノシン受容体がブロックされ、睡眠の質が大幅に低下する危険性が高い状態です。',
   };
 }
 
 /**
- * 単一摂取の経過時間後における残存カフェイン量（mg）
+ * 指数関数的カフェイン減衰モデル
+ * C(t) = C0 * (1/2)^(t / halfLife)
  */
 export function calculateRemainingCaffeine(
   initialMg: number,
@@ -106,7 +107,27 @@ export function calculateTotalCaffeineAt(
 }
 
 /**
- * 今（currentTime）飲んだ場合に、就寝時刻（bedTime）で安全閾値（25mg）以下に収まる最大粉末量（g）
+ * 今（currentTime）飲んだ場合に、就寝時刻（bedTime）で安全閾値（25mg）以下に収まる最大許容量
+ */
+export function calculateMaxSafeCaffeineMg(
+  currentEvents: IntakeEvent[],
+  currentTime: Date,
+  bedTime: Date,
+  halfLifeHours: number,
+  safeThresholdMg: number = 25
+): number {
+  const existingAtBed = calculateTotalCaffeineAt(currentEvents, bedTime, halfLifeHours);
+  const remainingAllowanceAtBed = Math.max(0, safeThresholdMg - existingAtBed);
+
+  const hoursToBed = Math.max(0, (bedTime.getTime() - currentTime.getTime()) / (1000 * 60 * 60));
+  if (hoursToBed <= 0) return 0;
+
+  const maxInitialMg = remainingAllowanceAtBed * Math.pow(2, hoursToBed / halfLifeHours);
+  return Math.max(0, Math.round(maxInitialMg * 10) / 10);
+}
+
+/**
+ * 今飲める最大粉末量（g）
  */
 export function calculateMaxSafePowderGrams(
   currentEvents: IntakeEvent[],
@@ -116,20 +137,12 @@ export function calculateMaxSafePowderGrams(
   safeThresholdMg: number = 25,
   caffeinePerGram: number = 40
 ): number {
-  const existingAtBed = calculateTotalCaffeineAt(currentEvents, bedTime, halfLifeHours);
-  const remainingAllowanceAtBed = Math.max(0, safeThresholdMg - existingAtBed);
-
-  const hoursToBed = Math.max(0, (bedTime.getTime() - currentTime.getTime()) / (1000 * 60 * 60));
-  if (hoursToBed <= 0) return 0;
-
-  const maxInitialMg = remainingAllowanceAtBed * Math.pow(2, hoursToBed / halfLifeHours);
-  const maxGrams = maxInitialMg / caffeinePerGram;
-
-  return Math.max(0, Math.round(maxGrams * 10) / 10);
+  const maxMg = calculateMaxSafeCaffeineMg(currentEvents, currentTime, bedTime, halfLifeHours, safeThresholdMg);
+  return Math.max(0, Math.round((maxMg / caffeinePerGram) * 10) / 10);
 }
 
 /**
- * 規定粉末量（標準2g = 80mg）を飲む場合の就寝前最終デッドライン時刻
+ * 指定カフェイン量（doseMg）を飲む場合の就寝前最終デッドライン時刻
  */
 export function calculateDeadlineForDose(
   currentEvents: IntakeEvent[],
@@ -188,7 +201,9 @@ export function runSimulation(
   events: IntakeEvent[],
   currentTime: Date,
   bedTime: Date,
-  halfLifeHours: number
+  halfLifeHours: number,
+  targetDoseMg: number = 80,
+  targetName: string = '標準2g (80mg)'
 ): SimulationSummary {
   const bedCaffeineMg = calculateTotalCaffeineAt(events, bedTime, halfLifeHours);
   const roundedBedMg = Math.round(bedCaffeineMg * 10) / 10;
@@ -219,7 +234,8 @@ export function runSimulation(
 
   const hourlyPoints = generateSimulationPoints(events, graphStart, graphEnd, halfLifeHours, 15);
   const maxSafePowderGrams = calculateMaxSafePowderGrams(events, currentTime, bedTime, halfLifeHours);
-  const deadlineFor2g = calculateDeadlineForDose(events, 80, bedTime, halfLifeHours);
+  const maxSafeCaffeineMg = calculateMaxSafeCaffeineMg(events, currentTime, bedTime, halfLifeHours);
+  const deadlineForTarget = calculateDeadlineForDose(events, targetDoseMg, bedTime, halfLifeHours);
 
   return {
     bedTime,
@@ -228,6 +244,8 @@ export function runSimulation(
     totalDailyCaffeineMg,
     hourlyPoints,
     maxSafePowderGrams,
-    deadlineFor2g,
+    maxSafeCaffeineMg,
+    deadlineForTarget,
+    targetPresetName: targetName,
   };
 }
