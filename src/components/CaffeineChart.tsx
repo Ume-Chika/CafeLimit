@@ -95,44 +95,24 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const annotations: any = {};
 
-    // 25mg 安全ライン
+    // 25mg 快眠安全ライン（文字は削除し点線のみ表示）
     annotations['safeLine'] = {
       type: 'line',
       yMin: 25,
       yMax: 25,
-      borderColor: 'rgba(16, 185, 129, 0.7)',
+      borderColor: 'rgba(16, 185, 129, 0.75)',
       borderWidth: 1.5,
       borderDash: [4, 4],
-      label: {
-        display: true,
-        content: '安全閾値 (25mg)',
-        position: 'start',
-        backgroundColor: 'rgba(16, 185, 129, 0.85)',
-        color: '#ffffff',
-        font: { size: 10, weight: 'bold' },
-        padding: 3,
-        borderRadius: 4,
-      },
     };
 
-    // 50mg 覚醒リスクライン
+    // 50mg 覚醒リスクライン（文字は削除し点線のみ表示）
     annotations['warningLine'] = {
       type: 'line',
       yMin: 50,
       yMax: 50,
-      borderColor: 'rgba(239, 68, 68, 0.7)',
+      borderColor: 'rgba(239, 68, 68, 0.75)',
       borderWidth: 1.5,
       borderDash: [4, 4],
-      label: {
-        display: true,
-        content: '覚醒リスク (50mg)',
-        position: 'start',
-        backgroundColor: 'rgba(239, 68, 68, 0.85)',
-        color: '#ffffff',
-        font: { size: 10, weight: 'bold' },
-        padding: 3,
-        borderRadius: 4,
-      },
     };
 
     // 現在時刻マーカー
@@ -445,14 +425,14 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
           <Activity className="w-4 h-4 text-amber-800" />
           <h3 className="text-xs font-black text-stone-900">体内カフェイン推移</h3>
         </div>
-        <div className="flex items-center space-x-2 text-[10px] font-bold text-stone-500">
-          <span className="flex items-center">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 mr-1"></span>
-            快眠 (&lt;25mg)
+        <div className="flex items-center space-x-2.5 text-[10px] font-bold text-stone-500">
+          <span className="flex items-center space-x-1">
+            <span className="inline-block w-3 border-b-2 border-dashed border-emerald-500"></span>
+            <span className="text-emerald-700">快眠安全域 (&lt;25mg)</span>
           </span>
-          <span className="flex items-center">
-            <span className="w-2 h-2 rounded-full bg-red-500 mr-1"></span>
-            覚醒 (&ge;50mg)
+          <span className="flex items-center space-x-1">
+            <span className="inline-block w-3 border-b-2 border-dashed border-red-500"></span>
+            <span className="text-red-600">覚醒警戒域 (&ge;50mg)</span>
           </span>
         </div>
       </div>
@@ -506,6 +486,20 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
           }}
           aria-label="就寝時刻 (グラフ内)"
         />
+
+        {/* グラフ上の選択位置に確実に表示されるオレンジのハイライトピン（パルス波紋付き） */}
+        {selectedPointInfo && (
+          <div
+            className="absolute rounded-full w-3.5 h-3.5 bg-amber-500 border-2 border-white shadow-md pointer-events-none z-20 transition-all duration-75 ease-out"
+            style={{
+              left: `${selectedPointInfo.rawXPx}px`,
+              top: `${selectedPointInfo.yPx}px`,
+              transform: 'translate(-50%, -50%)',
+            }}
+          >
+            <span className="absolute -inset-1 rounded-full bg-amber-400/40 animate-ping" />
+          </div>
+        )}
 
         {/* グラフ内ピン留めインタラクティブ吹き出し（ドラッグ中リアルタイム追従 ＆ ボタン一体化 ＆ 先端オフセット補正） */}
         {selectedPointInfo && (

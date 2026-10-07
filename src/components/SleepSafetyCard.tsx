@@ -1,6 +1,6 @@
 import React from 'react';
-import { Moon, Coffee, Clock } from 'lucide-react';
-import type { SimulationSummary, MetabolicSpeed } from '../types/caffeine';
+import { Moon, Coffee, Clock, Activity, ChevronRight } from 'lucide-react';
+import type { SimulationSummary, MetabolicSpeed, AppSettings, BeveragePreset } from '../types/caffeine';
 import { METABOLIC_PROFILES } from '../types/caffeine';
 import { format } from 'date-fns';
 
@@ -9,11 +9,9 @@ interface SleepSafetyCardProps {
   bedTime: string; // "23:30" 形式
   onChangeBedTime: (timeStr: string) => void;
   metabolicSpeed: MetabolicSpeed;
-  onChangeMetabolicSpeed: (speed: MetabolicSpeed) => void;
-}
-
-export interface SleepSafetyCardHandle {
-  openBedTimePicker: () => void;
+  onOpenMetabolicModal: () => void;
+  settings: AppSettings;
+  targetPreset?: BeveragePreset;
 }
 
 export const SleepSafetyCard: React.FC<SleepSafetyCardProps> = ({
@@ -21,10 +19,14 @@ export const SleepSafetyCard: React.FC<SleepSafetyCardProps> = ({
   bedTime,
   onChangeBedTime,
   metabolicSpeed,
-  onChangeMetabolicSpeed,
+  onOpenMetabolicModal,
+  settings,
+  targetPreset,
 }) => {
-  const { evaluation, bedCaffeineMg, maxSafePowderGrams, deadlineFor2g } = summary;
+  const { evaluation, bedCaffeineMg, maxSafePowderGrams, maxSafeCaffeineMg, deadlineForTarget, targetPresetName } = summary;
   const timeInputRef = React.useRef<HTMLInputElement>(null);
+
+  const currentProfile = METABOLIC_PROFILES[metabolicSpeed] || METABOLIC_PROFILES.standard;
 
   // 0〜75mg を 0〜100% のゲージにマッピング
   const gaugePercent = Math.min(100, Math.max(0, (bedCaffeineMg / 75) * 100));
@@ -42,6 +44,45 @@ export const SleepSafetyCard: React.FC<SleepSafetyCardProps> = ({
       }
     }
   };
+
+  // 「今飲める最大量」の表示文字列のフォーマット
+  const renderMaxIntakeText = () => {
+    if (maxSafeCaffeineMg <= 0) {
+      return {
+        main: '0',
+        unit: settings.maxIntakeUnit === 'powder' ? 'g' : settings.maxIntakeUnit === 'caffeine' ? 'mg' : '杯/缶',
+        sub: '（制限推奨）',
+      };
+    }
+
+    if (settings.maxIntakeUnit === 'powder') {
+      return {
+        main: `${maxSafePowderGrams}`,
+        unit: 'g',
+        sub: `(約 ${Math.round(maxSafePowderGrams * 40)}mg)`,
+      };
+    }
+
+    if (settings.maxIntakeUnit === 'caffeine') {
+      return {
+        main: `${maxSafeCaffeineMg}`,
+        unit: 'mg',
+        sub: `(粉末換算 約 ${(maxSafeCaffeineMg / 40).toFixed(1)}g)`,
+      };
+    }
+
+    // preset（選択中ドリンク換算）
+    const targetMg = targetPreset ? targetPreset.caffeineMg : 80;
+    const count = (maxSafeCaffeineMg / targetMg).toFixed(1);
+    const unitLabel = targetPreset?.category === 'energy' ? '缶' : '杯';
+    return {
+      main: `約 ${count}`,
+      unit: unitLabel,
+      sub: `(${targetPreset ? targetPreset.name : '標準2g'}換算)`,
+    };
+  };
+
+  const maxIntakeData = renderMaxIntakeText();
 
   return (
     <div id="sleep-safety-section" className="bg-white rounded-3xl shadow-sm border border-stone-200/90 overflow-hidden space-y-0">
@@ -62,7 +103,7 @@ export const SleepSafetyCard: React.FC<SleepSafetyCardProps> = ({
             <span className="text-[10px] bg-stone-700 text-stone-300 px-1.5 py-0.5 rounded font-bold">変更</span>
           </button>
 
-          {/* ネイティブ input (目立たないように配置しつつ確実にトリガー可能にする) */}
+          {/* ネイティブ input */}
           <input
             ref={timeInputRef}
             type="time"
@@ -73,21 +114,18 @@ export const SleepSafetyCard: React.FC<SleepSafetyCardProps> = ({
           />
         </div>
 
-        {/* 代謝体質 */}
-        <div className="flex items-center space-x-2">
-          <span className="text-xs font-medium text-stone-400">代謝:</span>
-          <select
-            value={metabolicSpeed}
-            onChange={(e) => onChangeMetabolicSpeed(e.target.value as MetabolicSpeed)}
-            className="bg-stone-800/90 hover:bg-stone-700/90 text-white text-xs font-bold px-2.5 py-1.5 rounded-xl border border-stone-700 focus:outline-none cursor-pointer transition-all"
-          >
-            {Object.values(METABOLIC_PROFILES).map((profile) => (
-              <option key={profile.type} value={profile.type}>
-                {profile.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        {/* 代謝体質（タップでわかりやすい解説付きモーダルが起動） */}
+        <button
+          type="button"
+          onClick={onOpenMetabolicModal}
+          className="flex items-center space-x-1.5 bg-stone-800/90 hover:bg-stone-700/90 active:scale-95 text-white px-3 py-1.5 rounded-xl border border-stone-700 text-xs font-bold transition-all cursor-pointer group"
+          title="タップして代謝体質・半減期を変更"
+        >
+          <Activity className="w-3.5 h-3.5 text-amber-400" />
+          <span className="text-stone-300 font-normal">代謝:</span>
+          <span className="text-amber-200">{currentProfile.shortLabel}</span>
+          <ChevronRight className="w-3.5 h-3.5 text-stone-400 group-hover:translate-x-0.5 transition-transform" />
+        </button>
       </div>
 
       {/* メインステータスエリア */}
@@ -159,25 +197,27 @@ export const SleepSafetyCard: React.FC<SleepSafetyCardProps> = ({
               <span className="text-[11px] font-bold text-stone-500 block">今飲める最大量</span>
               <div className="flex items-baseline space-x-1">
                 <span className="text-xl font-black font-mono text-[#3E271E]">
-                  {maxSafePowderGrams > 0 ? `${maxSafePowderGrams} g` : '0 g'}
+                  {maxIntakeData.main} <span className="text-sm font-bold">{maxIntakeData.unit}</span>
                 </span>
                 <span className="text-[11px] font-semibold text-stone-600">
-                  {maxSafePowderGrams > 0 ? `(約 ${Math.round(maxSafePowderGrams * 40)}mg)` : '（制限推奨）'}
+                  {maxIntakeData.sub}
                 </span>
               </div>
             </div>
           </div>
 
-          {/* 逆算②：標準2gのデッドライン */}
+          {/* 逆算②：指定ドリンクの最終時刻 */}
           <div className="bg-[#F0F5FA] rounded-2xl p-3.5 border border-sky-900/10 flex items-center space-x-3">
             <div className="w-10 h-10 rounded-xl bg-sky-700 text-white flex items-center justify-center shrink-0 shadow-xs">
               <Clock className="w-5 h-5" />
             </div>
             <div>
-              <span className="text-[11px] font-bold text-stone-500 block">標準2g (80mg) 最終時刻</span>
+              <span className="text-[11px] font-bold text-stone-500 block line-clamp-1">
+                {targetPresetName} 最終時刻
+              </span>
               <div className="flex items-baseline space-x-1">
                 <span className="text-xl font-black font-mono text-sky-950">
-                  {format(deadlineFor2g, 'HH:mm')}
+                  {format(deadlineForTarget, 'HH:mm')}
                 </span>
                 <span className="text-[11px] font-semibold text-stone-600">まで</span>
               </div>
