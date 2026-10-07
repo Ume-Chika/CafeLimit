@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState, useEffect } from 'react';
+import React, { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -58,6 +58,7 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
 }) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const chartRef = useRef<any>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const popupRef = useRef<HTMLDivElement>(null);
   const isDraggingRef = useRef(false);
 
@@ -180,47 +181,91 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
   const maxVal = Math.max(...dataValues, 60);
 
   // グラフ上の座標から直感的にポイントを特定し、吹き出しを更新する関数（ドラッグ・タップ共通）
-  const updatePointAtClientX = (clientX: number) => {
-    const chart = chartRef.current;
-    if (!chart) return;
+  const updatePointAtClientX = useCallback(
+    (clientX: number) => {
+      const chart = chartRef.current;
+      if (!chart) return;
 
-    const rect = chart.canvas.getBoundingClientRect();
-    const clickX = clientX - rect.left;
-    const xAxis = chart.scales.x;
-    const yAxis = chart.scales.y;
-    if (!xAxis || !yAxis) return;
+      const rect = chart.canvas.getBoundingClientRect();
+      const clickX = clientX - rect.left;
+      const xAxis = chart.scales.x;
+      const yAxis = chart.scales.y;
+      if (!xAxis || !yAxis) return;
 
-    const val = xAxis.getValueForPixel(clickX);
-    if (typeof val !== 'number') return;
+      const val = xAxis.getValueForPixel(clickX);
+      if (typeof val !== 'number') return;
 
-    const targetIndex = Math.max(0, Math.min(points.length - 1, Math.round(val)));
-    const targetPoint = points[targetIndex];
-    if (!targetPoint) return;
+      const targetIndex = Math.max(0, Math.min(points.length - 1, Math.round(val)));
+      const targetPoint = points[targetIndex];
+      if (!targetPoint) return;
 
-    const pointMs = targetPoint.time.getTime();
+      const pointMs = targetPoint.time.getTime();
 
-    // 前後10分以内の既存摂取イベント
-    const matchedEvent = events.find((e) => {
-      const evMs = new Date(e.timestamp).getTime();
-      return Math.abs(evMs - pointMs) <= 10 * 60 * 1000;
-    });
+      // 前後10分以内の既存摂取イベント
+      const matchedEvent = events.find((e) => {
+        const evMs = new Date(e.timestamp).getTime();
+        return Math.abs(evMs - pointMs) <= 10 * 60 * 1000;
+      });
 
-    const rawXPx = xAxis.getPixelForValue(targetIndex);
-    const rawYPx = yAxis.getPixelForValue(targetPoint.caffeineMg);
-    const chartWidth = chart.width || 320;
-    const boxXPx = Math.max(95, Math.min(rawXPx, chartWidth - 95));
-    const yPx = Math.max(15, rawYPx);
+      const rawXPx = xAxis.getPixelForValue(targetIndex);
+      const rawYPx = yAxis.getPixelForValue(targetPoint.caffeineMg);
+      const chartWidth = chart.width || 320;
+      const boxXPx = Math.max(95, Math.min(rawXPx, chartWidth - 95));
+      const yPx = Math.max(15, rawYPx);
 
-    setSelectedPointInfo({
-      rawXPx,
-      boxXPx,
-      yPx,
-      time: targetPoint.time,
-      timeLabel: format(targetPoint.time, 'M/d(E) HH:mm'),
-      caffeineMg: targetPoint.caffeineMg,
-      event: matchedEvent,
-    });
-  };
+      setSelectedPointInfo({
+        rawXPx,
+        boxXPx,
+        yPx,
+        time: targetPoint.time,
+        timeLabel: format(targetPoint.time, 'M/d(E) HH:mm'),
+        caffeineMg: targetPoint.caffeineMg,
+        event: matchedEvent,
+      });
+    },
+    [points, events]
+  );
+
+  // スマホでのスワイプ（ドラッグスクラブ）時に画面全体の縦スクロールを確実に防止するリスナー登録
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length > 0) {
+        isDraggingRef.current = true;
+        updatePointAtClientX(e.touches[0].clientX);
+        if (e.cancelable) {
+          e.preventDefault();
+        }
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (isDraggingRef.current && e.touches.length > 0) {
+        updatePointAtClientX(e.touches[0].clientX);
+        if (e.cancelable) {
+          e.preventDefault();
+        }
+      }
+    };
+
+    const handleTouchEnd = () => {
+      isDraggingRef.current = false;
+    };
+
+    container.addEventListener('touchstart', handleTouchStart, { passive: false });
+    container.addEventListener('touchmove', handleTouchMove, { passive: false });
+    container.addEventListener('touchend', handleTouchEnd);
+    container.addEventListener('touchcancel', handleTouchEnd);
+
+    return () => {
+      container.removeEventListener('touchstart', handleTouchStart);
+      container.removeEventListener('touchmove', handleTouchMove);
+      container.removeEventListener('touchend', handleTouchEnd);
+      container.removeEventListener('touchcancel', handleTouchEnd);
+    };
+  }, [updatePointAtClientX]);
 
   // グラフクリックハンドラ（要素判定対応）
   const handleChartClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
@@ -404,7 +449,8 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
 
       {/* グラフキャンバス & 一体型フローティング吹き出し & ドラッグスクラブ */}
       <div
-        className="h-56 sm:h-64 w-full cursor-pointer relative select-none touch-pan-y"
+        ref={containerRef}
+        className="h-56 sm:h-64 w-full cursor-pointer relative select-none touch-none"
         onPointerDown={(e) => {
           isDraggingRef.current = true;
           updatePointAtClientX(e.clientX);
@@ -418,20 +464,6 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
           isDraggingRef.current = false;
         }}
         onPointerCancel={() => {
-          isDraggingRef.current = false;
-        }}
-        onTouchStart={(e) => {
-          isDraggingRef.current = true;
-          if (e.touches[0]) {
-            updatePointAtClientX(e.touches[0].clientX);
-          }
-        }}
-        onTouchMove={(e) => {
-          if (e.touches[0]) {
-            updatePointAtClientX(e.touches[0].clientX);
-          }
-        }}
-        onTouchEnd={() => {
           isDraggingRef.current = false;
         }}
       >
