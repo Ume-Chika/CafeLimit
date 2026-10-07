@@ -169,14 +169,6 @@ export default function App() {
     }
   };
 
-  // グラフから就寝線をタップ ➔ 就寝時刻ピッカーを直接起動
-  const handleFocusBedTime = () => {
-    const btn = document.getElementById('bedtime-picker-button');
-    if (btn) {
-      btn.click();
-    }
-  };
-
   return (
     <div className="min-h-screen bg-[#F8F5EE] text-stone-900 flex flex-col font-sans selection:bg-amber-200">
       {/* ヘッダー */}
@@ -226,9 +218,10 @@ export default function App() {
             events={events}
             currentTime={currentTime}
             bedTime={bedTimeDate}
+            bedTimeStr={bedTimeStr}
+            onChangeBedTime={setBedTimeStr}
             onSelectEventToEdit={(ev) => setEditingEvent(ev)}
             onSelectTimeToBrew={handleSelectTimeToBrew}
-            onFocusBedTime={handleFocusBedTime}
           />
         </section>
 

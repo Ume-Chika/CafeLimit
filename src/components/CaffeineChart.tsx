@@ -34,9 +34,10 @@ interface CaffeineChartProps {
   events: IntakeEvent[];
   currentTime: Date;
   bedTime: Date;
+  bedTimeStr: string;
+  onChangeBedTime: (timeStr: string) => void;
   onSelectEventToEdit: (event: IntakeEvent) => void;
   onSelectTimeToBrew: (time: Date) => void;
-  onFocusBedTime?: () => void;
 }
 
 interface SelectedPointInfo {
@@ -53,17 +54,20 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
   events,
   currentTime,
   bedTime,
+  bedTimeStr,
+  onChangeBedTime,
   onSelectEventToEdit,
   onSelectTimeToBrew,
-  onFocusBedTime,
 }) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const chartRef = useRef<any>(null);
+  const chartBedTimeInputRef = useRef<HTMLInputElement>(null);
+  const isDraggingRef = useRef(false);
 
-  // グラフ上でタップ選択された時間と残存量の情報（座標付き）
+  // グラフ上でタップ/ドラッグ選択された時間と残存量の情報（座標付き）
   const [selectedPointInfo, setSelectedPointInfo] = useState<SelectedPointInfo | null>(null);
 
-  const { labels, dataValues, eventAnnotations } = useMemo(() => {
+  const { labels, dataValues, eventAnnotations, bedLineIndex } = useMemo(() => {
     const lbls = points.map((p) => p.timeLabel);
     const vals = points.map((p) => p.caffeineMg);
 
@@ -175,24 +179,88 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
       };
     }
 
-    return { labels: lbls, dataValues: vals, eventAnnotations: annotations };
+    return { labels: lbls, dataValues: vals, eventAnnotations: annotations, bedLineIndex: closestBedIdx };
   }, [points, currentTime, bedTime]);
 
   const maxVal = Math.max(...dataValues, 60);
 
-  // グラフクリックハンドラ
+  // 就寝時刻ピッカーをグラフ上の位置で直接開く
+  const handleOpenChartBedTimePicker = () => {
+    if (chartBedTimeInputRef.current) {
+      if (typeof chartBedTimeInputRef.current.showPicker === 'function') {
+        try {
+          chartBedTimeInputRef.current.showPicker();
+        } catch {
+          chartBedTimeInputRef.current.focus();
+        }
+      } else {
+        chartBedTimeInputRef.current.focus();
+      }
+    }
+  };
+
+  // グラフ上の座標から直感的にポイントを特定し、吹き出しを更新する関数（ドラッグ・タップ共通）
+  const updatePointAtClientX = (clientX: number, isInitialTap = false) => {
+    const chart = chartRef.current;
+    if (!chart) return;
+
+    const rect = chart.canvas.getBoundingClientRect();
+    const clickX = clientX - rect.left;
+    const xAxis = chart.scales.x;
+    const yAxis = chart.scales.y;
+    if (!xAxis || !yAxis) return;
+
+    const val = xAxis.getValueForPixel(clickX);
+    if (typeof val !== 'number') return;
+
+    const targetIndex = Math.max(0, Math.min(points.length - 1, Math.round(val)));
+    const targetPoint = points[targetIndex];
+    if (!targetPoint) return;
+
+    const pointMs = targetPoint.time.getTime();
+
+    // 初回タップ時かつ就寝ライン近傍（12分以内）なら、就寝ピッカーを直接起動
+    const bedMs = bedTime.getTime();
+    if (isInitialTap && Math.abs(pointMs - bedMs) <= 12 * 60 * 1000) {
+      handleOpenChartBedTimePicker();
+      setSelectedPointInfo(null);
+      return;
+    }
+
+    // 前後10分以内の既存摂取イベント
+    const matchedEvent = events.find((e) => {
+      const evMs = new Date(e.timestamp).getTime();
+      return Math.abs(evMs - pointMs) <= 10 * 60 * 1000;
+    });
+
+    const rawXPx = xAxis.getPixelForValue(targetIndex);
+    const rawYPx = yAxis.getPixelForValue(targetPoint.caffeineMg);
+    const chartWidth = chart.width || 320;
+    const xPx = Math.max(90, Math.min(rawXPx, chartWidth - 90));
+    const yPx = Math.max(15, rawYPx);
+
+    setSelectedPointInfo({
+      xPx,
+      yPx,
+      time: targetPoint.time,
+      timeLabel: format(targetPoint.time, 'M/d(E) HH:mm'),
+      caffeineMg: targetPoint.caffeineMg,
+      event: matchedEvent,
+    });
+  };
+
+  // グラフクリックハンドラ（要素判定対応）
   const handleChartClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
     const chart = chartRef.current;
     if (!chart) return;
 
-    // 1. 点要素を直接クリックしたか判定
+    // 1. 点要素（イベント点など）を直接クリックしたか判定
     const element = getElementAtEvent(chart, event);
     if (element && element.length > 0) {
       const idx = element[0].index;
       const clickedP = points[idx];
       if (clickedP) {
         const pointMs = clickedP.time.getTime();
-        // 厳密に一致するイベントを検索（前後10分以内）
         const matchedEvent = events.find((e) => {
           const evMs = new Date(e.timestamp).getTime();
           return Math.abs(evMs - pointMs) <= 10 * 60 * 1000;
@@ -216,51 +284,8 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
       }
     }
 
-    // 2. 線や空白エリアのクリック
-    const rect = chart.canvas.getBoundingClientRect();
-    const clickX = event.clientX - rect.left;
-    const xAxis = chart.scales.x;
-    const yAxis = chart.scales.y;
-    if (!xAxis || !yAxis) return;
-
-    const val = xAxis.getValueForPixel(clickX);
-    if (typeof val !== 'number') return;
-
-    const targetIndex = Math.max(0, Math.min(points.length - 1, Math.round(val)));
-    const clickedPoint = points[targetIndex];
-    if (!clickedPoint) return;
-
-    const pointMs = clickedPoint.time.getTime();
-
-    // 就寝ライン近辺（12分以内）をクリックした場合、就寝時刻変更ピッカーを直結起動
-    const bedMs = bedTime.getTime();
-    if (Math.abs(pointMs - bedMs) <= 12 * 60 * 1000 && onFocusBedTime) {
-      onFocusBedTime();
-      setSelectedPointInfo(null);
-      return;
-    }
-
-    // 正確に一致する既存イベントがあるか（前後10分）
-    const matchedEvent = events.find((e) => {
-      const evMs = new Date(e.timestamp).getTime();
-      return Math.abs(evMs - pointMs) <= 10 * 60 * 1000;
-    });
-
-    const rawXPx = xAxis.getPixelForValue(targetIndex);
-    const rawYPx = yAxis.getPixelForValue(clickedPoint.caffeineMg);
-    const chartWidth = chart.width || 320;
-    const xPx = Math.max(90, Math.min(rawXPx, chartWidth - 90));
-    const yPx = Math.max(15, rawYPx);
-
-    // インタラクティブな吹き出しポップオーバーを表示
-    setSelectedPointInfo({
-      xPx,
-      yPx,
-      time: clickedPoint.time,
-      timeLabel: format(clickedPoint.time, 'M/d(E) HH:mm'),
-      caffeineMg: clickedPoint.caffeineMg,
-      event: matchedEvent,
-    });
+    // 2. 通常クリック
+    updatePointAtClientX(event.clientX, true);
   };
 
   const handleConfirmAddAtTime = () => {
@@ -356,6 +381,12 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
 
   const isNearTop = selectedPointInfo ? selectedPointInfo.yPx < 110 : false;
 
+  // 就寝ラインのパーセント位置を計算（グラフ上にピッカーダイアログをアンカー配置）
+  const bedPercent =
+    points.length > 1 && bedLineIndex !== -1
+      ? Math.max(5, Math.min((bedLineIndex / (points.length - 1)) * 100, 95))
+      : 80;
+
   return (
     <div className="bg-white rounded-3xl p-4 sm:p-5 shadow-xs border border-stone-200/90 space-y-2 relative">
       <div className="flex items-center justify-between">
@@ -375,14 +406,60 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
         </div>
       </div>
 
-      {/* グラフキャンバス & 一体型フローティング吹き出し */}
-      <div className="h-56 sm:h-64 w-full cursor-pointer relative select-none">
+      {/* グラフキャンバス & 一体型フローティング吹き出し & ドラッグスクラブ */}
+      <div
+        className="h-56 sm:h-64 w-full cursor-pointer relative select-none touch-pan-y"
+        onPointerDown={(e) => {
+          isDraggingRef.current = true;
+          updatePointAtClientX(e.clientX, true);
+        }}
+        onPointerMove={(e) => {
+          if (isDraggingRef.current) {
+            updatePointAtClientX(e.clientX, false);
+          }
+        }}
+        onPointerUp={() => {
+          isDraggingRef.current = false;
+        }}
+        onPointerCancel={() => {
+          isDraggingRef.current = false;
+        }}
+        onTouchStart={(e) => {
+          isDraggingRef.current = true;
+          if (e.touches[0]) {
+            updatePointAtClientX(e.touches[0].clientX, true);
+          }
+        }}
+        onTouchMove={(e) => {
+          if (e.touches[0]) {
+            updatePointAtClientX(e.touches[0].clientX, false);
+          }
+        }}
+        onTouchEnd={() => {
+          isDraggingRef.current = false;
+        }}
+      >
         <Line ref={chartRef} data={chartData} options={options} onClick={handleChartClick} />
 
-        {/* グラフ内ピン留めインタラクティブ吹き出し（二重表示を解消し、ボタンを完全一体化） */}
+        {/* グラフ内の就寝ライン位置に配置されたアンカー用 time input（PCブラウザで就寝ラインの真上にダイアログが出る） */}
+        <input
+          ref={chartBedTimeInputRef}
+          type="time"
+          value={bedTimeStr}
+          onChange={(e) => onChangeBedTime(e.target.value)}
+          className="absolute opacity-0 pointer-events-none w-24 h-8"
+          style={{
+            left: `${bedPercent}%`,
+            top: '25px',
+            transform: 'translateX(-50%)',
+          }}
+          aria-label="就寝時刻 (グラフ内)"
+        />
+
+        {/* グラフ内ピン留めインタラクティブ吹き出し（ドラッグ中リアルタイム追従 ＆ ボタン一体化） */}
         {selectedPointInfo && (
           <div
-            className="absolute z-30 pointer-events-auto transition-all animate-fadeIn"
+            className="absolute z-30 pointer-events-auto transition-transform duration-75 ease-out animate-fadeIn"
             style={{
               left: `${selectedPointInfo.xPx}px`,
               top: isNearTop
@@ -410,7 +487,7 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
                     e.stopPropagation();
                     setSelectedPointInfo(null);
                   }}
-                  className="text-stone-400 hover:text-white p-0.5 rounded-full"
+                  className="text-stone-400 hover:text-white p-0.5 rounded-full cursor-pointer"
                 >
                   <X className="w-3 h-3" />
                 </button>
