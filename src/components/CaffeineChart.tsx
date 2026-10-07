@@ -232,6 +232,12 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
     if (!container) return;
 
     const handleTouchStart = (e: TouchEvent) => {
+      // 吹き出し（×ボタンや「+この時間に追加」ボタン等）内のタップはグラフの座標更新を行わずそのまま通す
+      if (popupRef.current && popupRef.current.contains(e.target as Node)) {
+        isDraggingRef.current = false;
+        return;
+      }
+
       if (e.touches.length > 0) {
         isDraggingRef.current = true;
         updatePointAtClientX(e.touches[0].clientX);
@@ -242,6 +248,11 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
     };
 
     const handleTouchMove = (e: TouchEvent) => {
+      // 吹き出し内の操作は無視
+      if (popupRef.current && popupRef.current.contains(e.target as Node)) {
+        return;
+      }
+
       if (isDraggingRef.current && e.touches.length > 0) {
         updatePointAtClientX(e.touches[0].clientX);
         if (e.cancelable) {
@@ -452,10 +463,12 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
         ref={containerRef}
         className="h-56 sm:h-64 w-full cursor-pointer relative select-none touch-none"
         onPointerDown={(e) => {
+          if (popupRef.current && popupRef.current.contains(e.target as Node)) return;
           isDraggingRef.current = true;
           updatePointAtClientX(e.clientX);
         }}
         onPointerMove={(e) => {
+          if (popupRef.current && popupRef.current.contains(e.target as Node)) return;
           if (isDraggingRef.current) {
             updatePointAtClientX(e.clientX);
           }
