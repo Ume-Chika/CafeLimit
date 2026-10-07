@@ -84,14 +84,14 @@ export default function App() {
         console.error('Failed to parse events', e);
       }
     }
-    // 初期サンプル（本日の朝8:00に平和カプチ2g）
+    // 初期サンプル（本日の朝8:00にネスカフェ2.0g）
     const sampleDate = new Date();
     sampleDate.setHours(8, 0, 0, 0);
     return [
       {
         id: 'sample-morning',
         timestamp: sampleDate.toISOString(),
-        name: '平和カプチ',
+        name: 'ネスカフェ (2.0g)',
         category: 'nescafe',
         powderGrams: 2.0,
         caffeineMg: 80,
@@ -425,9 +425,9 @@ export default function App() {
                   ネスカフェ・ゴールドブレンドの公式基準に基づき、<strong>粉末 1.0g あたり 40mg</strong> のカフェインを含有するモデルを採用しています。
                 </p>
                 <ul className="list-disc pl-5 space-y-0.5 text-[11px] text-stone-600">
-                  <li>平和カプチ（標準 2.0g）: 80mg</li>
-                  <li>ちょいうすカプチ / 二杯目以降（1.0g）: 40mg</li>
-                  <li>濃いめマグ（3.0g）: 120mg</li>
+                  <li>ネスカフェ（標準 2.0g）: 80mg</li>
+                  <li>ネスカフェ 軽め（1.0g）: 40mg</li>
+                  <li>ネスカフェ 濃いめ（3.0g）: 120mg</li>
                 </ul>
               </div>
 
