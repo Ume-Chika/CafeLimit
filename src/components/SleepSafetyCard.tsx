@@ -24,26 +24,10 @@ export const SleepSafetyCard: React.FC<SleepSafetyCardProps> = ({
   targetPreset,
 }) => {
   const { evaluation, bedCaffeineMg, maxSafePowderGrams, maxSafeCaffeineMg, deadlineForTarget, targetPresetName } = summary;
-  const timeInputRef = React.useRef<HTMLInputElement>(null);
-
   const currentProfile = METABOLIC_PROFILES[metabolicSpeed] || METABOLIC_PROFILES.standard;
 
   // 0〜75mg を 0〜100% のゲージにマッピング
   const gaugePercent = Math.min(100, Math.max(0, (bedCaffeineMg / 75) * 100));
-
-  const handleOpenBedTimePicker = () => {
-    if (timeInputRef.current) {
-      if (typeof timeInputRef.current.showPicker === 'function') {
-        try {
-          timeInputRef.current.showPicker();
-        } catch {
-          timeInputRef.current.focus();
-        }
-      } else {
-        timeInputRef.current.focus();
-      }
-    }
-  };
 
   // 「今飲める最大量」の表示文字列のフォーマット
   const renderMaxIntakeText = () => {
@@ -88,31 +72,27 @@ export const SleepSafetyCard: React.FC<SleepSafetyCardProps> = ({
     <div id="sleep-safety-section" className="bg-white rounded-3xl shadow-sm border border-stone-200/90 overflow-hidden space-y-0">
       {/* 上部ヘッダー：設定コントロールバー */}
       <div className="bg-[#241C18] text-stone-200 px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-2.5">
-        {/* 就寝時刻（タップでOS標準の直感的なタイムピッカーが起動） */}
-        <div className="relative flex items-center">
-          <button
-            type="button"
-            id="bedtime-picker-button"
-            onClick={handleOpenBedTimePicker}
-            className="flex items-center space-x-2 bg-stone-800/90 hover:bg-stone-700/90 active:scale-95 text-white px-3 py-1.5 rounded-xl border border-stone-700 transition-all cursor-pointer group shadow-xs"
-            title="タップして就寝時刻を変更"
-          >
-            <Moon className="w-4 h-4 text-amber-400 group-hover:rotate-12 transition-transform" />
-            <span className="text-xs text-stone-300 font-medium">就寝:</span>
-            <span className="font-mono font-black text-sm text-amber-300 tracking-wide">{bedTime}</span>
-            <span className="text-[10px] bg-stone-700 text-stone-300 px-1.5 py-0.5 rounded font-bold">変更</span>
-          </button>
+        {/* 就寝時刻（タップでOS標準の直感的なタイムピッカーが確実に起動） */}
+        <label
+          htmlFor="bedtime-picker-input"
+          className="relative flex items-center bg-stone-800/90 hover:bg-stone-700/90 active:scale-95 text-white px-3 py-1.5 rounded-xl border border-stone-700 transition-all cursor-pointer group shadow-xs select-none"
+          title="タップして就寝時刻を変更"
+        >
+          <Moon className="w-4 h-4 text-amber-400 group-hover:rotate-12 transition-transform mr-2 shrink-0" />
+          <span className="text-xs text-stone-300 font-medium mr-1.5">就寝:</span>
+          <span className="font-mono font-black text-sm text-amber-300 tracking-wide mr-2">{bedTime}</span>
+          <span className="text-[10px] bg-stone-700 text-stone-300 px-1.5 py-0.5 rounded font-bold">変更</span>
 
-          {/* ネイティブ input */}
+          {/* ネイティブ input を前面に透明で重ね、タップを100%直接検知 */}
           <input
-            ref={timeInputRef}
+            id="bedtime-picker-input"
             type="time"
             value={bedTime}
             onChange={(e) => onChangeBedTime(e.target.value)}
-            className="absolute inset-0 opacity-0 pointer-events-none w-full h-full"
-            aria-label="就寝時刻"
+            className="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10 pointer-events-auto"
+            aria-label="就寝時刻を変更"
           />
-        </div>
+        </label>
 
         {/* 代謝体質（タップでわかりやすい解説付きモーダルが起動） */}
         <button

@@ -283,8 +283,6 @@ export default function App() {
             events={events}
             currentTime={currentTime}
             bedTime={bedTimeDate}
-            bedTimeStr={bedTimeStr}
-            onChangeBedTime={setBedTimeStr}
             onSelectEventToEdit={(ev) => setEditingEvent(ev)}
             onSelectTimeToBrew={handleSelectTimeToBrew}
           />
