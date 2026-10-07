@@ -2,11 +2,15 @@ import type { IntakeEvent, SleepEvaluation, SimulationSummary, ChartDataPoint } 
 import { startOfDay, addDays, format } from 'date-fns';
 
 /**
- * 昨日の00:00以前（一昨日以前）のイベントを自動削除し、昨日・今日・未来のみ保持する
+ * 「昨日・今日・明日」の3日間に収まるイベントのみ保持し、それ以外（一昨日以前、明後日以降）を自動削除する
  */
 export function cleanOldEvents(events: IntakeEvent[], baseDate: Date = new Date()): IntakeEvent[] {
   const yesterdayStart = startOfDay(addDays(baseDate, -1));
-  return events.filter((e) => new Date(e.timestamp).getTime() >= yesterdayStart.getTime());
+  const tomorrowEnd = startOfDay(addDays(baseDate, 2)); // 明日の23:59:59まで
+  return events.filter((e) => {
+    const timeMs = new Date(e.timestamp).getTime();
+    return timeMs >= yesterdayStart.getTime() && timeMs < tomorrowEnd.getTime();
+  });
 }
 
 /**
@@ -38,27 +42,29 @@ export function getUpcomingBedTime(currentTime: Date, bedTimeStr: string): Date 
 }
 
 /**
- * 睡眠影響の判定区分（EFSA / 睡眠医学基準）
+ * 睡眠影響の判定区分（EFSA / 睡眠医学基準・設定された安全閾値に連動）
  */
-export function evaluateSleepImpact(caffeineMg: number): SleepEvaluation {
-  if (caffeineMg < 25) {
+export function evaluateSleepImpact(caffeineMg: number, safeThresholdMg: number = 25): SleepEvaluation {
+  const cautionThreshold = safeThresholdMg * 2;
+
+  if (caffeineMg <= safeThresholdMg) {
     return {
       status: 'SAFE',
       label: '快眠ゾーン（影響なし）',
       color: '#10B981', // green-500
       bgColor: '#ECFDF5', // green-50
       borderColor: '#A7F3D0', // green-200
-      description: '就寝時のカフェイン覚醒作用は実質ゼロです。深い眠り（徐波睡眠）を守れます。',
+      description: `就寝時のカフェイン残存が ${safeThresholdMg}mg 以下です。深い眠り（徐波睡眠）を守れます。`,
     };
   }
-  if (caffeineMg < 50) {
+  if (caffeineMg < cautionThreshold) {
     return {
       status: 'CAUTION',
       label: '注意ゾーン（軽度影響）',
       color: '#F59E0B', // amber-500
       bgColor: '#FFFBEB', // amber-50
       borderColor: '#FDE68A', // amber-200
-      description: '入眠潜時の延長や中途覚醒のリスクがあります。これ以上のカフェイン摂取は控えましょう。',
+      description: `入眠潜時の延長や中途覚醒のリスクがあります（安全上限: ${safeThresholdMg}mg）。`,
     };
   }
   return {
@@ -67,7 +73,7 @@ export function evaluateSleepImpact(caffeineMg: number): SleepEvaluation {
     color: '#EF4444', // red-500
     bgColor: '#FEF2F2', // red-50
     borderColor: '#FECACA', // red-200
-    description: 'アデノシン受容体がブロックされ、睡眠の質が大幅に低下する危険性が高い状態です。',
+    description: `アデノシン受容体がブロックされ、睡眠の質が大幅に低下する危険性が高い状態です（基準: ≥${cautionThreshold}mg）。`,
   };
 }
 
@@ -203,11 +209,12 @@ export function runSimulation(
   bedTime: Date,
   halfLifeHours: number,
   targetDoseMg: number = 80,
-  targetName: string = '標準2g (80mg)'
+  targetName: string = '標準2g (80mg)',
+  safeThresholdMg: number = 25
 ): SimulationSummary {
   const bedCaffeineMg = calculateTotalCaffeineAt(events, bedTime, halfLifeHours);
   const roundedBedMg = Math.round(bedCaffeineMg * 10) / 10;
-  const evaluation = evaluateSleepImpact(roundedBedMg);
+  const evaluation = evaluateSleepImpact(roundedBedMg, safeThresholdMg);
   const totalDailyCaffeineMg = events.reduce((sum, e) => sum + e.caffeineMg, 0);
 
   // グラフ時間範囲の設定：
@@ -233,9 +240,9 @@ export function runSimulation(
   const graphEnd = new Date(endMs);
 
   const hourlyPoints = generateSimulationPoints(events, graphStart, graphEnd, halfLifeHours, 15);
-  const maxSafePowderGrams = calculateMaxSafePowderGrams(events, currentTime, bedTime, halfLifeHours);
-  const maxSafeCaffeineMg = calculateMaxSafeCaffeineMg(events, currentTime, bedTime, halfLifeHours);
-  const deadlineForTarget = calculateDeadlineForDose(events, targetDoseMg, bedTime, halfLifeHours);
+  const maxSafePowderGrams = calculateMaxSafePowderGrams(events, currentTime, bedTime, halfLifeHours, safeThresholdMg);
+  const maxSafeCaffeineMg = calculateMaxSafeCaffeineMg(events, currentTime, bedTime, halfLifeHours, safeThresholdMg);
+  const deadlineForTarget = calculateDeadlineForDose(events, targetDoseMg, bedTime, halfLifeHours, safeThresholdMg);
 
   return {
     bedTime,
@@ -247,5 +254,6 @@ export function runSimulation(
     maxSafeCaffeineMg,
     deadlineForTarget,
     targetPresetName: targetName,
+    safeSleepThresholdMg: safeThresholdMg,
   };
 }

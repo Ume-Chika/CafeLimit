@@ -96,6 +96,7 @@ export interface SimulationSummary {
   maxSafeCaffeineMg: number;
   deadlineForTarget: Date;
   targetPresetName: string;
+  safeSleepThresholdMg: number;
 }
 
 export type MaxIntakeDisplayUnit = 'powder' | 'caffeine' | 'preset';
@@ -105,4 +106,5 @@ export interface AppSettings {
   deadlinePresetId: string;
   confirmBeforeAdd: boolean;
   customHalfLifeHours: number;
+  safeSleepThresholdMg: number; // デフォルト 25mg
 }

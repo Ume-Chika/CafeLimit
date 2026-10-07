@@ -26,8 +26,10 @@ export const SleepSafetyCard: React.FC<SleepSafetyCardProps> = ({
   const { evaluation, bedCaffeineMg, maxSafePowderGrams, maxSafeCaffeineMg, deadlineForTarget, targetPresetName } = summary;
   const currentProfile = METABOLIC_PROFILES[metabolicSpeed] || METABOLIC_PROFILES.standard;
 
-  // 0〜75mg を 0〜100% のゲージにマッピング
-  const gaugePercent = Math.min(100, Math.max(0, (bedCaffeineMg / 75) * 100));
+  const safeTh = summary.safeSleepThresholdMg || 25;
+  const maxScale = safeTh * 3;
+  // 0〜maxScale を 0〜100% のゲージにマッピング
+  const gaugePercent = Math.min(100, Math.max(0, (bedCaffeineMg / maxScale) * 100));
 
   // 「今飲める最大量」の表示文字列のフォーマット
   const renderMaxIntakeText = () => {
@@ -160,9 +162,9 @@ export const SleepSafetyCard: React.FC<SleepSafetyCardProps> = ({
           </div>
           <div className="flex justify-between text-[10px] font-bold text-stone-600 px-0.5">
             <span className="text-emerald-700">0mg (快眠)</span>
-            <span className="text-emerald-700">25mg (安全上限)</span>
-            <span className="text-amber-700">50mg (警告境界)</span>
-            <span className="text-red-700">75mg+</span>
+            <span className="text-emerald-700">{safeTh}mg (安全上限)</span>
+            <span className="text-amber-700">{safeTh * 2}mg (警告境界)</span>
+            <span className="text-red-700">{safeTh * 3}mg+</span>
           </div>
         </div>
 

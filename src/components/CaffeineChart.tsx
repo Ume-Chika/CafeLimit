@@ -34,6 +34,7 @@ interface CaffeineChartProps {
   events: IntakeEvent[];
   currentTime: Date;
   bedTime: Date;
+  safeSleepThresholdMg?: number;
   onSelectEventToEdit: (event: IntakeEvent) => void;
   onSelectTimeToBrew: (time: Date) => void;
 }
@@ -53,6 +54,7 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
   events,
   currentTime,
   bedTime,
+  safeSleepThresholdMg = 25,
   onSelectEventToEdit,
   onSelectTimeToBrew,
 }) => {
@@ -91,21 +93,21 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const annotations: any = {};
 
-    // 25mg 快眠安全ライン（文字は削除し点線のみ表示）
+    // 快眠安全ライン（設定された閾値・文字は削除し点線のみ表示）
     annotations['safeLine'] = {
       type: 'line',
-      yMin: 25,
-      yMax: 25,
+      yMin: safeSleepThresholdMg,
+      yMax: safeSleepThresholdMg,
       borderColor: 'rgba(16, 185, 129, 0.75)',
       borderWidth: 1.5,
       borderDash: [4, 4],
     };
 
-    // 50mg 覚醒リスクライン（文字は削除し点線のみ表示）
+    // 覚醒警戒ライン（設定された閾値×2・文字は削除し点線のみ表示）
     annotations['warningLine'] = {
       type: 'line',
-      yMin: 50,
-      yMax: 50,
+      yMin: safeSleepThresholdMg * 2,
+      yMax: safeSleepThresholdMg * 2,
       borderColor: 'rgba(239, 68, 68, 0.75)',
       borderWidth: 1.5,
       borderDash: [4, 4],
@@ -449,11 +451,11 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
         <div className="flex items-center space-x-2.5 text-[10px] font-bold text-stone-500">
           <span className="flex items-center space-x-1">
             <span className="inline-block w-3 border-b-2 border-dashed border-emerald-500"></span>
-            <span className="text-emerald-700">快眠安全域 (&lt;25mg)</span>
+            <span className="text-emerald-700">快眠安全域 (&le;{safeSleepThresholdMg}mg)</span>
           </span>
           <span className="flex items-center space-x-1">
             <span className="inline-block w-3 border-b-2 border-dashed border-red-500"></span>
-            <span className="text-red-600">覚醒警戒域 (&ge;50mg)</span>
+            <span className="text-red-600">覚醒警戒域 (&ge;{safeSleepThresholdMg * 2}mg)</span>
           </span>
         </div>
       </div>
