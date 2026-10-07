@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useMemo, useRef, useState, useEffect } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -63,10 +63,30 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const chartRef = useRef<any>(null);
   const chartBedTimeInputRef = useRef<HTMLInputElement>(null);
+  const popupRef = useRef<HTMLDivElement>(null);
   const isDraggingRef = useRef(false);
 
   // グラフ上でタップ/ドラッグ選択された時間と残存量の情報（座標付き）
   const [selectedPointInfo, setSelectedPointInfo] = useState<SelectedPointInfo | null>(null);
+
+  // 吹き出し外タップで吹き出し＆仮選択点を閉じる
+  useEffect(() => {
+    if (!selectedPointInfo) return;
+
+    const handleOutsidePointer = (e: MouseEvent | TouchEvent) => {
+      if (popupRef.current && !popupRef.current.contains(e.target as Node)) {
+        // グラフ自体の操作中でなければ閉じる
+        if (!chartRef.current?.canvas?.contains(e.target as Node)) {
+          setSelectedPointInfo(null);
+        }
+      }
+    };
+
+    window.addEventListener('pointerdown', handleOutsidePointer);
+    return () => {
+      window.removeEventListener('pointerdown', handleOutsidePointer);
+    };
+  }, [selectedPointInfo]);
 
   const { labels, dataValues, eventAnnotations, bedLineIndex } = useMemo(() => {
     const lbls = points.map((p) => p.timeLabel);
@@ -318,17 +338,34 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
         pointRadius: (ctx: { dataIndex: number }) => {
           const pointTime = points[ctx.dataIndex]?.time?.getTime();
           if (!pointTime) return 0;
-          // イベント発生時刻の点のみ大きくプロット
+          // 実際の摂取イベントがある点は常に大きくプロット
           const hasEvent = events.some((e) => {
             const evTime = new Date(e.timestamp).getTime();
             return Math.abs(evTime - pointTime) <= 10 * 60 * 1000;
           });
-          return hasEvent ? 6 : 0;
+          if (hasEvent) return 6;
+
+          // 吹き出しが表示されている間のみ、選択位置の点を一時的にハイライト
+          if (selectedPointInfo) {
+            const isSelected = Math.abs(selectedPointInfo.time.getTime() - pointTime) < 8 * 60 * 1000;
+            if (isSelected) return 5;
+          }
+
+          // 吹き出しが消えているときは点は描画しない
+          return 0;
         },
         pointBackgroundColor: '#F59E0B',
         pointBorderColor: '#78350F',
         pointBorderWidth: 2,
-        pointHoverRadius: 8,
+        pointHoverRadius: (ctx: { dataIndex: number }) => {
+          const pointTime = points[ctx.dataIndex]?.time?.getTime();
+          if (!pointTime) return 0;
+          const hasEvent = events.some((e) => {
+            const evTime = new Date(e.timestamp).getTime();
+            return Math.abs(evTime - pointTime) <= 10 * 60 * 1000;
+          });
+          return hasEvent ? 8 : 0;
+        },
         tension: 0.25,
       },
     ],
@@ -473,6 +510,7 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
         {/* グラフ内ピン留めインタラクティブ吹き出し（ドラッグ中リアルタイム追従 ＆ ボタン一体化 ＆ 先端オフセット補正） */}
         {selectedPointInfo && (
           <div
+            ref={popupRef}
             className="absolute z-30 pointer-events-auto transition-transform duration-75 ease-out animate-fadeIn"
             style={{
               left: `${selectedPointInfo.boxXPx}px`,
