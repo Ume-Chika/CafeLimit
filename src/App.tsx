@@ -266,7 +266,7 @@ export default function App() {
               CafeLimit
             </h1>
             <span className="text-[10px] font-bold bg-[#EADDC9] text-stone-900 px-2 py-0.5 rounded-full">
-              ネスカフェ＆エナドリ対応*
+              主要ドリンク対応*
             </span>
           </div>
 
@@ -358,6 +358,7 @@ export default function App() {
         <p className="text-stone-400 max-w-xl mx-auto leading-relaxed">
           ※「ネスカフェ」「ゴールドブレンド」「バリスタ」はネスレ日本株式会社の登録商標です。
           ※「モンスターエナジー」はMonster Energy Companyの登録商標です。「レッドブル」はRed Bull GmbHの登録商標です。
+          ※「コカ・コーラ」はThe Coca-Cola Companyの登録商標です。「ペプシ」はPepsiCo, Inc.の登録商標です。「ドクターペッパー」はKeurig Dr Pepper Inc.の登録商標です。
         </p>
         <p className="text-stone-400">
           ※ 本アプリは個人開発の非公式シミュレーションツールであり、各権利者様公式とは一切関係ありません。
@@ -473,7 +474,7 @@ export default function App() {
 
               <div className="p-3 bg-stone-50 rounded-xl border border-stone-200 text-[10px] text-stone-500 space-y-1">
                 <p>※ 本ツールは科学的文献に基づくシミュレーターであり、医療目的の診断やアドバイスを提供するものではありません。</p>
-                <p>※「ネスカフェ」「ゴールドブレンド」はネスレ日本株式会社、「モンスターエナジー」はMonster Energy Company、「レッドブル」はRed Bull GmbHの登録商標です。</p>
+                <p>※「ネスカフェ」「ゴールドブレンド」はネスレ日本株式会社、「モンスターエナジー」はMonster Energy Company、「レッドブル」はRed Bull GmbH、「コカ・コーラ」はThe Coca-Cola Company、「ペプシ」はPepsiCo, Inc.、「ドクターペッパー」はKeurig Dr Pepper Inc.の登録商標です。</p>
               </div>
             </div>
           </div>

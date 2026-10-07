@@ -219,6 +219,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               ※「モンスターエナジー」はMonster Energy Companyの登録商標です。「レッドブル」はRed Bull GmbHの登録商標です。
             </p>
             <p>
+              ※「コカ・コーラ」はThe Coca-Cola Companyの登録商標です。「ペプシ」はPepsiCo, Inc.の登録商標です。「ドクターペッパー」はKeurig Dr Pepper Inc.の登録商標です。
+            </p>
+            <p>
               ※ 本アプリは個人開発の非公式カフェイン代謝シミュレーションツールであり、各権利者様とは一切関係ありません。
             </p>
           </div>
