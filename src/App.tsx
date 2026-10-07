@@ -234,7 +234,7 @@ export default function App() {
               CafeLimit
             </h1>
             <span className="text-[10px] font-bold bg-[#EADDC9] text-stone-900 px-2 py-0.5 rounded-full">
-              ネスカフェ対応*
+              ネスカフェ＆エナドリ対応*
             </span>
           </div>
 
@@ -322,10 +322,14 @@ export default function App() {
       </main>
 
       {/* フッター（商標免責表記） */}
-      <footer className="border-t border-stone-200/80 bg-stone-100/60 py-4 px-4 text-center text-[10px] text-stone-500 space-y-1">
+      <footer className="border-t border-stone-200/80 bg-stone-100/60 py-4 px-4 text-center text-[10px] text-stone-500 space-y-1.5">
         <p className="font-bold text-stone-700">CafeLimit — カフェイン動態・睡眠シミュレーター</p>
+        <p className="text-stone-400 max-w-xl mx-auto leading-relaxed">
+          ※「ネスカフェ」「ゴールドブレンド」「バリスタ」はネスレ日本株式会社の登録商標です。
+          ※「モンスターエナジー」はMonster Energy Companyの登録商標です。「レッドブル」はRed Bull GmbHの登録商標です。
+        </p>
         <p className="text-stone-400">
-          ※「ネスカフェ」「ゴールドブレンド」はネスレ日本株式会社の登録商標です。本アプリは個人開発の非公式ツールです。
+          ※ 本アプリは個人開発の非公式シミュレーションツールであり、各権利者様公式とは一切関係ありません。
         </p>
       </footer>
 
@@ -434,8 +438,9 @@ export default function App() {
                 </p>
               </div>
 
-              <div className="p-3 bg-stone-50 rounded-xl border border-stone-200 text-[10px] text-stone-500">
-                ※ 本ツールは科学的文献に基づくシミュレーターであり、医療目的の診断やアドバイスを提供するものではありません。
+              <div className="p-3 bg-stone-50 rounded-xl border border-stone-200 text-[10px] text-stone-500 space-y-1">
+                <p>※ 本ツールは科学的文献に基づくシミュレーターであり、医療目的の診断やアドバイスを提供するものではありません。</p>
+                <p>※「ネスカフェ」「ゴールドブレンド」はネスレ日本株式会社、「モンスターエナジー」はMonster Energy Company、「レッドブル」はRed Bull GmbHの登録商標です。</p>
               </div>
             </div>
           </div>
