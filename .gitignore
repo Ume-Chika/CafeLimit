@@ -25,3 +25,4 @@ dist-ssr
 screenshot*.png
 screenshot*.js
 test-interaction.js
+test-modal.js

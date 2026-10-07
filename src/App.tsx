@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Coffee, Info } from 'lucide-react';
 import type { IntakeEvent, BeveragePreset, MetabolicSpeed } from './types/caffeine';
 import { METABOLIC_PROFILES } from './types/caffeine';
@@ -10,6 +10,7 @@ import { SleepSafetyCard } from './components/SleepSafetyCard';
 import { CaffeineChart } from './components/CaffeineChart';
 import { TimelineList } from './components/TimelineList';
 import { AddPresetModal } from './components/AddPresetModal';
+import { EditEventModal } from './components/EditEventModal';
 
 const STORAGE_KEY_EVENTS = 'cafelimit_events_v3';
 const STORAGE_KEY_PRESETS = 'cafelimit_presets_v3';
@@ -17,6 +18,8 @@ const STORAGE_KEY_BEDTIME = 'cafelimit_bedtime_v3';
 const STORAGE_KEY_SPEED = 'cafelimit_speed_v3';
 
 export default function App() {
+  const panelSectionRef = useRef<HTMLDivElement>(null);
+
   // 1. 状態管理
   const [currentTime, setCurrentTime] = useState<Date>(() => new Date());
   const [selectedTime, setSelectedTime] = useState<Date>(() => {
@@ -71,7 +74,9 @@ export default function App() {
     ];
   });
 
+  // モーダル状態
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<IntakeEvent | null>(null);
   const [showScientificModal, setShowScientificModal] = useState(false);
 
   // 1分ごとに現在時刻更新 & 一昨日以前のイベント削除
@@ -101,7 +106,7 @@ export default function App() {
     localStorage.setItem(STORAGE_KEY_SPEED, metabolicSpeed);
   }, [metabolicSpeed]);
 
-  // 就寝時刻 Date 算出（1日の流れに沿った今夜の就寝）
+  // 就寝時刻 Date 算出
   const bedTimeDate = useMemo(() => {
     return getUpcomingBedTime(currentTime, bedTimeStr);
   }, [currentTime, bedTimeStr]);
@@ -113,7 +118,7 @@ export default function App() {
     return runSimulation(events, currentTime, bedTimeDate, halfLifeHours);
   }, [events, currentTime, bedTimeDate, halfLifeHours]);
 
-  // 摂取イベント追加（スライダーで選択中の時刻で追加）
+  // 摂取イベント追加
   const handleAddIntakeEvent = (preset: BeveragePreset) => {
     const newEvent: IntakeEvent = {
       id: `intake-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
@@ -128,6 +133,12 @@ export default function App() {
     setEvents((prev) => cleanOldEvents([...prev, newEvent], currentTime));
   };
 
+  // イベント更新
+  const handleUpdateEvent = (updated: IntakeEvent) => {
+    setEvents((prev) => prev.map((e) => (e.id === updated.id ? updated : e)));
+  };
+
+  // イベント削除
   const handleDeleteEvent = (id: string) => {
     setEvents((prev) => prev.filter((e) => e.id !== id));
   };
@@ -147,6 +158,14 @@ export default function App() {
 
   const handleDeleteCustomPreset = (presetId: string) => {
     setPresets((prev) => prev.filter((p) => p.id !== presetId));
+  };
+
+  // グラフから空いている時間をタップ $\to$ スライダーを合わせてパネルへスクロール
+  const handleSelectTimeToBrew = (time: Date) => {
+    setSelectedTime(time);
+    if (panelSectionRef.current) {
+      panelSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
   };
 
   return (
@@ -191,18 +210,26 @@ export default function App() {
           />
         </section>
 
-        {/* 2. 時系列グラフ */}
+        {/* 2. 時系列グラフ（タップでイベント編集・追加・就寝変更） */}
         <section>
           <CaffeineChart
             points={simulationSummary.hourlyPoints}
             events={events}
             currentTime={currentTime}
             bedTime={bedTimeDate}
+            onSelectEventToEdit={(ev) => setEditingEvent(ev)}
+            onSelectTimeToBrew={handleSelectTimeToBrew}
+            onEditBedTime={() => {
+              const input = prompt('就寝時刻を入力してください（例: 23:30）', bedTimeStr);
+              if (input && /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(input)) {
+                setBedTimeStr(input);
+              }
+            }}
           />
         </section>
 
         {/* 3. 時間指定スライダー ＆ 真下にクイック追加パネル */}
-        <section className="space-y-3 bg-white/60 p-4 rounded-3xl border border-stone-200/80">
+        <section ref={panelSectionRef} className="space-y-3 bg-white/60 p-4 rounded-3xl border border-stone-200/80 scroll-mt-20">
           {/* 時間指定スライダー */}
           <TimeSliderPicker
             selectedTime={selectedTime}
@@ -233,6 +260,15 @@ export default function App() {
       <footer className="border-t border-stone-200/80 bg-stone-100/50 py-3.5 px-4 text-center text-[11px] text-stone-400">
         <p className="font-semibold text-stone-500">CafeLimit — カフェイン・睡眠シミュレーター</p>
       </footer>
+
+      {/* イベント編集モーダル */}
+      <EditEventModal
+        isOpen={editingEvent !== null}
+        event={editingEvent}
+        onClose={() => setEditingEvent(null)}
+        onUpdateEvent={handleUpdateEvent}
+        onDeleteEvent={handleDeleteEvent}
+      />
 
       {/* ドリンク追加モーダル */}
       <AddPresetModal

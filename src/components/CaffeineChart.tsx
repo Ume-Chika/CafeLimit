@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -12,9 +12,9 @@ import {
 } from 'chart.js';
 import type { ChartOptions } from 'chart.js';
 import annotationPlugin from 'chartjs-plugin-annotation';
-import { Line } from 'react-chartjs-2';
+import { Line, getElementAtEvent } from 'react-chartjs-2';
 import type { ChartDataPoint, IntakeEvent } from '../types/caffeine';
-import { Activity } from 'lucide-react';
+import { Activity, Plus, Edit2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 ChartJS.register(
@@ -34,6 +34,9 @@ interface CaffeineChartProps {
   events: IntakeEvent[];
   currentTime: Date;
   bedTime: Date;
+  onSelectEventToEdit: (event: IntakeEvent) => void;
+  onSelectTimeToBrew: (time: Date) => void;
+  onEditBedTime?: () => void;
 }
 
 export const CaffeineChart: React.FC<CaffeineChartProps> = ({
@@ -41,7 +44,13 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
   events,
   currentTime,
   bedTime,
+  onSelectEventToEdit,
+  onSelectTimeToBrew,
+  onEditBedTime,
 }) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const chartRef = useRef<any>(null);
+
   const { labels, dataValues, eventAnnotations } = useMemo(() => {
     const lbls = points.map((p) => p.timeLabel);
     const vals = points.map((p) => p.caffeineMg);
@@ -89,7 +98,7 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
       },
     };
 
-    // 最も近い現在時刻のインデックスをタイムスタンプで検索
+    // 現在時刻マーカー
     const curMs = currentTime.getTime();
     let closestCurIdx = -1;
     let minCurDiff = Infinity;
@@ -121,7 +130,7 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
       };
     }
 
-    // 最も近い就寝時刻のインデックスを検索
+    // 就寝時刻マーカー
     const bedMs = bedTime.getTime();
     let closestBedIdx = -1;
     let minBedDiff = Infinity;
@@ -158,6 +167,57 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
 
   const maxVal = Math.max(...dataValues, 60);
 
+  // グラフクリックハンドラ
+  const handleChartClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
+    const chart = chartRef.current;
+    if (!chart) return;
+
+    // クリックされたデータ要素を取得
+    const element = getElementAtEvent(chart, event);
+    let targetIndex = -1;
+
+    if (element && element.length > 0) {
+      targetIndex = element[0].index;
+    } else {
+      // 要素直接でない場合、X座標から最も近いポイントを算出
+      const rect = chart.canvas.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const xAxis = chart.scales.x;
+      if (xAxis) {
+        const val = xAxis.getValueForPixel(x);
+        if (typeof val === 'number') {
+          targetIndex = Math.max(0, Math.min(points.length - 1, Math.round(val)));
+        }
+      }
+    }
+
+    if (targetIndex === -1 || !points[targetIndex]) return;
+
+    const clickedPoint = points[targetIndex];
+    const pointMs = clickedPoint.time.getTime();
+
+    // 1. 就寝時刻マーカー近辺（15分以内）のクリック判定
+    const bedMs = bedTime.getTime();
+    if (Math.abs(pointMs - bedMs) <= 15 * 60 * 1000 && onEditBedTime) {
+      onEditBedTime();
+      return;
+    }
+
+    // 2. その時刻に一致する摂取イベントがあるか検索（前後15分以内）
+    const matchedEvent = events.find((e) => {
+      const evMs = new Date(e.timestamp).getTime();
+      return Math.abs(evMs - pointMs) <= 15 * 60 * 1000;
+    });
+
+    if (matchedEvent) {
+      // 既存イベントあり $\to$ 編集・削除モーダルを開く
+      onSelectEventToEdit(matchedEvent);
+    } else {
+      // イベントなし $\to$ スライダーをこの時刻に合わせてパネルへすっとスクロール
+      onSelectTimeToBrew(clickedPoint.time);
+    }
+  };
+
   const chartData = {
     labels,
     datasets: [
@@ -178,16 +238,16 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
         pointRadius: (ctx: { dataIndex: number }) => {
           const pointTime = points[ctx.dataIndex]?.time?.getTime();
           if (!pointTime) return 0;
-          // 各イベントの時刻と7.5分以内なら点を表示
           const hasEvent = events.some((e) => {
             const evTime = new Date(e.timestamp).getTime();
             return Math.abs(evTime - pointTime) <= 7.5 * 60 * 1000;
           });
-          return hasEvent ? 5 : 0;
+          return hasEvent ? 6 : 0;
         },
         pointBackgroundColor: '#F59E0B',
         pointBorderColor: '#78350F',
         pointBorderWidth: 2,
+        pointHoverRadius: 8,
         tension: 0.25,
       },
     ],
@@ -229,12 +289,12 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
             if (!pTime) return '';
             const matched = events.filter((e) => {
               const evTime = new Date(e.timestamp).getTime();
-              return Math.abs(evTime - pTime) <= 7.5 * 60 * 1000;
+              return Math.abs(evTime - pTime) <= 15 * 60 * 1000;
             });
             if (matched.length > 0) {
-              return matched.map((e) => `☕ 摂取: ${e.name} (+${e.caffeineMg}mg)`).join('\n');
+              return matched.map((e) => `☕ ${e.name} (+${e.caffeineMg}mg) [タップで編集]`).join('\n');
             }
-            return '';
+            return '👉 タップしてこの時刻にコーヒーを追加';
           },
         },
       },
@@ -277,21 +337,35 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
         <div className="flex items-center space-x-2">
           <Activity className="w-4 h-4 text-amber-800" />
           <h3 className="text-xs font-black text-stone-900">体内カフェイン推移</h3>
+          <span className="text-[10px] text-stone-600 hidden sm:inline">（タップして編集・時間指定追加）</span>
         </div>
         <div className="flex items-center space-x-2 text-[10px] font-bold text-stone-500">
           <span className="flex items-center">
             <span className="w-2 h-2 rounded-full bg-emerald-500 mr-1"></span>
-            快眠域 (&lt;25mg)
+            快眠 (&lt;25mg)
           </span>
           <span className="flex items-center">
             <span className="w-2 h-2 rounded-full bg-red-500 mr-1"></span>
-            覚醒域 (&ge;50mg)
+            覚醒 (&ge;50mg)
           </span>
         </div>
       </div>
 
-      <div className="h-56 sm:h-64 w-full">
-        <Line data={chartData} options={options} />
+      {/* グラフキャンバス */}
+      <div className="h-56 sm:h-64 w-full cursor-pointer relative">
+        <Line ref={chartRef} data={chartData} options={options} onClick={handleChartClick} />
+      </div>
+
+      {/* グラフ下部ヘルプミニバー */}
+      <div className="flex items-center justify-between text-[11px] text-stone-600 pt-1 border-t border-stone-100">
+        <span className="flex items-center space-x-1">
+          <Edit2 className="w-3 h-3 text-amber-700" />
+          <span>丸い点をタップ：記録を編集・削除</span>
+        </span>
+        <span className="flex items-center space-x-1">
+          <Plus className="w-3 h-3 text-sky-700" />
+          <span>線をタップ：その時刻にドリンク追加</span>
+        </span>
       </div>
     </div>
   );
