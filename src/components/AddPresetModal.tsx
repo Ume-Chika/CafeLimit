@@ -122,8 +122,6 @@ export const AddPresetModal: React.FC<AddPresetModalProps> = ({
                   >
                     <div className="flex items-center space-x-3">
                       <NescafeCoffeeCup
-                        powderGrams={preset.powderGrams}
-                        waterMl={preset.waterMl}
                         color={preset.color}
                         category={preset.category}
                         size="sm"

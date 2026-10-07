@@ -10,27 +10,55 @@ export function cleanOldEvents(events: IntakeEvent[], baseDate: Date = new Date(
 }
 
 /**
+ * 就寝時刻（Date）の算出
+ * 「今夜の就寝」として、今日の朝起きてから夜寝るまでの時間軸を正確に合わせる
+ */
+export function getUpcomingBedTime(currentTime: Date, bedTimeStr: string): Date {
+  const [hStr, mStr] = bedTimeStr.split(':');
+  const hours = parseInt(hStr, 10) || 23;
+  const minutes = parseInt(mStr, 10) || 30;
+
+  const bedDate = new Date(currentTime);
+  bedDate.setHours(hours, minutes, 0, 0);
+
+  // 就寝時刻が深夜（0時〜5時）の場合
+  if (hours < 6) {
+    if (currentTime.getHours() >= 6) {
+      // 昼や夜から見て今夜寝る（＝翌日未明）
+      bedDate.setDate(bedDate.getDate() + 1);
+    }
+  } else {
+    // 就寝時刻が夜（6時以降）の場合
+    if (currentTime.getHours() < 6) {
+      // 現在が深夜3時で就寝が23:30の場合、今夜の就寝は今日23:30
+      bedDate.setHours(hours, minutes, 0, 0);
+    }
+  }
+  return bedDate;
+}
+
+/**
  * 睡眠影響の判定区分（EFSA / 睡眠医学基準）
  */
 export function evaluateSleepImpact(caffeineMg: number): SleepEvaluation {
   if (caffeineMg < 25) {
     return {
       status: 'SAFE',
-      label: '快眠ゾーン',
+      label: '快眠ゾーン（影響なし）',
       color: '#10B981', // green-500
       bgColor: '#ECFDF5', // green-50
       borderColor: '#A7F3D0', // green-200
-      description: '睡眠への影響はありません。深い徐波睡眠を維持できます。',
+      description: '就寝時のカフェイン覚醒作用は実質ゼロです。深い眠り（徐波睡眠）を守れます。',
     };
   }
   if (caffeineMg < 50) {
     return {
       status: 'CAUTION',
-      label: '注意ゾーン',
+      label: '注意ゾーン（軽度影響）',
       color: '#F59E0B', // amber-500
       bgColor: '#FFFBEB', // amber-50
       borderColor: '#FDE68A', // amber-200
-      description: '高感受性者で入眠遅延や眠りの浅さのリスクがあります。',
+      description: 'カフェインに敏感な方は、入眠遅延や中途覚醒のリスクがあります。',
     };
   }
   return {
@@ -39,7 +67,7 @@ export function evaluateSleepImpact(caffeineMg: number): SleepEvaluation {
     color: '#EF4444', // red-500
     bgColor: '#FEF2F2', // red-50
     borderColor: '#FECACA', // red-200
-    description: '中途覚醒や深睡眠の短縮リスクが高まります。摂取を控えてください。',
+    description: '深睡眠の減少や覚醒リスクが高まります。これ以上の摂取は控えましょう。',
   };
 }
 
@@ -79,7 +107,6 @@ export function calculateTotalCaffeineAt(
 
 /**
  * 今（currentTime）飲んだ場合に、就寝時刻（bedTime）で安全閾値（25mg）以下に収まる最大粉末量（g）
- * ネスカフェ原単位 40mg/g
  */
 export function calculateMaxSafePowderGrams(
   currentEvents: IntakeEvent[],
@@ -95,7 +122,6 @@ export function calculateMaxSafePowderGrams(
   const hoursToBed = Math.max(0, (bedTime.getTime() - currentTime.getTime()) / (1000 * 60 * 60));
   if (hoursToBed <= 0) return 0;
 
-  // C_bed = C_0 * 0.5^(hours / halfLife) => C_0 = C_bed * 2^(hours / halfLife)
   const maxInitialMg = remainingAllowanceAtBed * Math.pow(2, hoursToBed / halfLifeHours);
   const maxGrams = maxInitialMg / caffeinePerGram;
 
@@ -116,11 +142,9 @@ export function calculateDeadlineForDose(
   const allowedFromThisDose = Math.max(0.1, safeThresholdMg - existingAtBed);
 
   if (doseMg <= allowedFromThisDose) {
-    // 就寝直前でもOK
     return bedTime;
   }
 
-  // allowed = doseMg * (0.5)^(deltaT / halfLife) => deltaT = halfLife * log2(doseMg / allowed)
   const requiredHours = halfLifeHours * (Math.log(doseMg / allowedFromThisDose) / Math.log(2));
   const deadlineMs = bedTime.getTime() - requiredHours * 60 * 60 * 1000;
 
@@ -166,40 +190,34 @@ export function runSimulation(
   bedTime: Date,
   halfLifeHours: number
 ): SimulationSummary {
-  // 就寝時残存カフェイン量
   const bedCaffeineMg = calculateTotalCaffeineAt(events, bedTime, halfLifeHours);
   const roundedBedMg = Math.round(bedCaffeineMg * 10) / 10;
   const evaluation = evaluateSleepImpact(roundedBedMg);
-
-  // 1日総摂取量
   const totalDailyCaffeineMg = events.reduce((sum, e) => sum + e.caffeineMg, 0);
 
-  // グラフ時間範囲の動的算出：イベントが存在する時間帯を確実にカバーする
+  // グラフ時間範囲の設定：
+  // 朝06:00から今夜の就寝＋3時間後（または最長翌朝06:00）までを1日のベースとする
   const todayMorning = new Date(currentTime);
   todayMorning.setHours(6, 0, 0, 0);
 
-  let earliestMs = Math.min(todayMorning.getTime(), currentTime.getTime() - 4 * 60 * 60 * 1000);
-  let latestMs = Math.max(bedTime.getTime() + 4 * 60 * 60 * 1000, currentTime.getTime() + 6 * 60 * 60 * 1000);
+  let startMs = todayMorning.getTime();
+  let endMs = bedTime.getTime() + 3 * 60 * 60 * 1000;
 
-  if (events.length > 0) {
-    for (const ev of events) {
-      const evMs = new Date(ev.timestamp).getTime();
-      if (evMs < earliestMs) {
-        earliestMs = evMs - 60 * 60 * 1000; // イベント1時間前から
-      }
-      if (evMs + 6 * 60 * 60 * 1000 > latestMs) {
-        latestMs = evMs + 6 * 60 * 60 * 1000;
-      }
+  // イベントが早朝や深夜にある場合は範囲を包含
+  for (const ev of events) {
+    const evMs = new Date(ev.timestamp).getTime();
+    if (evMs < startMs) {
+      startMs = evMs - 30 * 60 * 1000;
+    }
+    if (evMs + 4 * 60 * 60 * 1000 > endMs) {
+      endMs = evMs + 4 * 60 * 60 * 1000;
     }
   }
 
-  const graphStart = new Date(earliestMs);
-  graphStart.setMinutes(0, 0, 0);
-
-  const graphEnd = new Date(latestMs);
+  const graphStart = new Date(startMs);
+  const graphEnd = new Date(endMs);
 
   const hourlyPoints = generateSimulationPoints(events, graphStart, graphEnd, halfLifeHours, 15);
-
   const maxSafePowderGrams = calculateMaxSafePowderGrams(events, currentTime, bedTime, halfLifeHours);
   const deadlineFor2g = calculateDeadlineForDose(events, 80, bedTime, halfLifeHours);
 
