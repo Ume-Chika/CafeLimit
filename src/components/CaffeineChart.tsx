@@ -17,7 +17,6 @@ import type { ChartDataPoint, IntakeEvent } from '../types/caffeine';
 import { Activity } from 'lucide-react';
 import { format } from 'date-fns';
 
-// Chart.js プラグイン登録
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -43,15 +42,10 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
   currentTime,
   bedTime,
 }) => {
-  const currentFormatted = format(currentTime, 'HH:mm');
-  const bedFormatted = format(bedTime, 'HH:mm');
-
-  // 最も近いラベルのインデックスを特定
   const { labels, dataValues, eventAnnotations } = useMemo(() => {
     const lbls = points.map((p) => p.timeLabel);
     const vals = points.map((p) => p.caffeineMg);
 
-    // イベント発生時刻のマーカーアノテーションを構築
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const annotations: any = {};
 
@@ -60,17 +54,17 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
       type: 'line',
       yMin: 25,
       yMax: 25,
-      borderColor: 'rgba(16, 185, 129, 0.75)',
+      borderColor: 'rgba(16, 185, 129, 0.7)',
       borderWidth: 1.5,
-      borderDash: [5, 4],
+      borderDash: [4, 4],
       label: {
         display: true,
         content: '安全閾値 (25mg)',
         position: 'start',
-        backgroundColor: 'rgba(16, 185, 129, 0.9)',
+        backgroundColor: 'rgba(16, 185, 129, 0.85)',
         color: '#ffffff',
         font: { size: 10, weight: 'bold' },
-        padding: 4,
+        padding: 3,
         borderRadius: 4,
       },
     };
@@ -80,28 +74,38 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
       type: 'line',
       yMin: 50,
       yMax: 50,
-      borderColor: 'rgba(239, 68, 68, 0.75)',
+      borderColor: 'rgba(239, 68, 68, 0.7)',
       borderWidth: 1.5,
-      borderDash: [5, 4],
+      borderDash: [4, 4],
       label: {
         display: true,
         content: '覚醒リスク (50mg)',
         position: 'start',
-        backgroundColor: 'rgba(239, 68, 68, 0.9)',
+        backgroundColor: 'rgba(239, 68, 68, 0.85)',
         color: '#ffffff',
         font: { size: 10, weight: 'bold' },
-        padding: 4,
+        padding: 3,
         borderRadius: 4,
       },
     };
 
-    // 現在時刻マーカー
-    const curIdx = lbls.findIndex((l) => l === currentFormatted);
-    if (curIdx !== -1) {
+    // 最も近い現在時刻のインデックスをタイムスタンプで検索
+    const curMs = currentTime.getTime();
+    let closestCurIdx = -1;
+    let minCurDiff = Infinity;
+    points.forEach((p, idx) => {
+      const diff = Math.abs(p.time.getTime() - curMs);
+      if (diff < minCurDiff) {
+        minCurDiff = diff;
+        closestCurIdx = idx;
+      }
+    });
+
+    if (closestCurIdx !== -1 && minCurDiff < 30 * 60 * 1000) {
       annotations['currentLine'] = {
         type: 'line',
-        xMin: curIdx,
-        xMax: curIdx,
+        xMin: closestCurIdx,
+        xMax: closestCurIdx,
         borderColor: 'rgba(59, 130, 246, 0.85)',
         borderWidth: 2,
         label: {
@@ -117,18 +121,28 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
       };
     }
 
-    // 就寝時刻マーカー
-    const bedIdx = lbls.findIndex((l) => l === bedFormatted);
-    if (bedIdx !== -1) {
+    // 最も近い就寝時刻のインデックスを検索
+    const bedMs = bedTime.getTime();
+    let closestBedIdx = -1;
+    let minBedDiff = Infinity;
+    points.forEach((p, idx) => {
+      const diff = Math.abs(p.time.getTime() - bedMs);
+      if (diff < minBedDiff) {
+        minBedDiff = diff;
+        closestBedIdx = idx;
+      }
+    });
+
+    if (closestBedIdx !== -1 && minBedDiff < 30 * 60 * 1000) {
       annotations['bedLine'] = {
         type: 'line',
-        xMin: bedIdx,
-        xMax: bedIdx,
+        xMin: closestBedIdx,
+        xMax: closestBedIdx,
         borderColor: 'rgba(109, 40, 217, 0.85)',
         borderWidth: 2,
         label: {
           display: true,
-          content: `就寝 (${bedFormatted})`,
+          content: `就寝 (${format(bedTime, 'HH:mm')})`,
           position: 'top',
           backgroundColor: 'rgba(109, 40, 217, 0.9)',
           color: '#ffffff',
@@ -140,7 +154,7 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
     }
 
     return { labels: lbls, dataValues: vals, eventAnnotations: annotations };
-  }, [points, currentFormatted, bedFormatted]);
+  }, [points, currentTime, bedTime]);
 
   const maxVal = Math.max(...dataValues, 60);
 
@@ -148,31 +162,33 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
     labels,
     datasets: [
       {
-        label: '体内残存カフェイン (mg)',
+        label: '体内残存カフェイン',
         data: dataValues,
         fill: true,
         backgroundColor: (context: { chart: { ctx: CanvasRenderingContext2D } }) => {
           const ctx = context.chart.ctx;
-          const gradient = ctx.createLinearGradient(0, 0, 0, 280);
-          gradient.addColorStop(0, 'rgba(180, 83, 9, 0.35)');
-          gradient.addColorStop(0.5, 'rgba(217, 119, 6, 0.15)');
-          gradient.addColorStop(1, 'rgba(245, 158, 11, 0.01)');
+          const gradient = ctx.createLinearGradient(0, 0, 0, 250);
+          gradient.addColorStop(0, 'rgba(180, 83, 9, 0.3)');
+          gradient.addColorStop(0.6, 'rgba(217, 119, 6, 0.08)');
+          gradient.addColorStop(1, 'rgba(245, 158, 11, 0.0)');
           return gradient;
         },
-        borderColor: '#B45309',
+        borderColor: '#92400E',
         borderWidth: 2.5,
         pointRadius: (ctx: { dataIndex: number }) => {
-          // イベント発生時刻と一致する点にマーカーを付ける
-          const pointLabel = labels[ctx.dataIndex];
-          const hasEvent = events.some(
-            (e) => format(new Date(e.timestamp), 'HH:mm') === pointLabel
-          );
-          return hasEvent ? 6 : 0;
+          const pointTime = points[ctx.dataIndex]?.time?.getTime();
+          if (!pointTime) return 0;
+          // 各イベントの時刻と7.5分以内なら点を表示
+          const hasEvent = events.some((e) => {
+            const evTime = new Date(e.timestamp).getTime();
+            return Math.abs(evTime - pointTime) <= 7.5 * 60 * 1000;
+          });
+          return hasEvent ? 5 : 0;
         },
         pointBackgroundColor: '#F59E0B',
         pointBorderColor: '#78350F',
         pointBorderWidth: 2,
-        tension: 0.3,
+        tension: 0.25,
       },
     ],
   };
@@ -192,27 +208,31 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
         backgroundColor: 'rgba(28, 25, 23, 0.95)',
         titleColor: '#F59E0B',
         bodyColor: '#FFFFFF',
-        titleFont: { size: 12, weight: 'bold' },
-        bodyFont: { size: 12, weight: 'normal' },
-        padding: 10,
+        titleFont: { size: 11, weight: 'bold' },
+        bodyFont: { size: 11, weight: 'normal' },
+        padding: 8,
         cornerRadius: 8,
         displayColors: false,
         callbacks: {
           title: (items) => {
             if (!items.length) return '';
-            return `時刻: ${items[0].label}`;
+            const idx = items[0].dataIndex;
+            const pTime = points[idx]?.time;
+            return pTime ? `${format(pTime, 'M/d(E) HH:mm')}` : `時刻: ${items[0].label}`;
           },
           label: (item) => {
-            const mg = item.parsed.y;
-            return `体内残存カフェイン: ${mg} mg`;
+            return `体内残存: ${item.parsed.y} mg`;
           },
           afterLabel: (item) => {
-            const itemLabel = item.label;
-            const matchedEvents = events.filter(
-              (e) => format(new Date(e.timestamp), 'HH:mm') === itemLabel
-            );
-            if (matchedEvents.length > 0) {
-              return matchedEvents.map((e) => `☕ 摂取: ${e.name} (+${e.caffeineMg}mg)`).join('\n');
+            const idx = item.dataIndex;
+            const pTime = points[idx]?.time?.getTime();
+            if (!pTime) return '';
+            const matched = events.filter((e) => {
+              const evTime = new Date(e.timestamp).getTime();
+              return Math.abs(evTime - pTime) <= 7.5 * 60 * 1000;
+            });
+            if (matched.length > 0) {
+              return matched.map((e) => `☕ 摂取: ${e.name} (+${e.caffeineMg}mg)`).join('\n');
             }
             return '';
           },
@@ -226,25 +246,25 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
     scales: {
       x: {
         grid: {
-          color: 'rgba(214, 211, 209, 0.3)',
+          color: 'rgba(214, 211, 209, 0.25)',
         },
         ticks: {
           font: { size: 10, weight: 'bold' },
-          color: '#57534E',
+          color: '#78716C',
           maxRotation: 0,
           autoSkip: true,
-          maxTicksLimit: 10,
+          maxTicksLimit: 8,
         },
       },
       y: {
         min: 0,
-        max: Math.ceil(maxVal * 1.15 / 10) * 10,
+        max: Math.ceil((maxVal * 1.15) / 10) * 10,
         grid: {
-          color: 'rgba(214, 211, 209, 0.3)',
+          color: 'rgba(214, 211, 209, 0.25)',
         },
         ticks: {
           font: { size: 10, weight: 'bold' },
-          color: '#57534E',
+          color: '#78716C',
           callback: (value) => `${value}mg`,
         },
       },
@@ -252,32 +272,25 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-3xl p-5 shadow-sm border border-stone-200/90 space-y-3">
-      {/* グラフ上部ヘッダー */}
+    <div className="bg-white rounded-3xl p-4 sm:p-5 shadow-xs border border-stone-200/90 space-y-2">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          <div className="w-7 h-7 rounded-lg bg-amber-100 flex items-center justify-center text-amber-800">
-            <Activity className="w-4 h-4" />
-          </div>
-          <div>
-            <h3 className="text-sm font-extrabold text-stone-900">体内カフェイン推移シミュレーション</h3>
-            <p className="text-[11px] text-stone-700">線形重ね合わせ代謝モデルによる時系列予測</p>
-          </div>
+          <Activity className="w-4 h-4 text-amber-800" />
+          <h3 className="text-xs font-black text-stone-900">体内カフェイン推移</h3>
         </div>
-        <div className="flex items-center space-x-3 text-[11px] font-semibold text-stone-600">
+        <div className="flex items-center space-x-2 text-[10px] font-bold text-stone-500">
           <span className="flex items-center">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-1 inline-block"></span>
-            安全域(&lt;25mg)
+            <span className="w-2 h-2 rounded-full bg-emerald-500 mr-1"></span>
+            快眠域 (&lt;25mg)
           </span>
           <span className="flex items-center">
-            <span className="w-2.5 h-2.5 rounded-full bg-red-500 mr-1 inline-block"></span>
-            阻害域(&ge;50mg)
+            <span className="w-2 h-2 rounded-full bg-red-500 mr-1"></span>
+            覚醒域 (&ge;50mg)
           </span>
         </div>
       </div>
 
-      {/* グラフ描画領域 */}
-      <div className="h-64 sm:h-72 w-full pt-1">
+      <div className="h-56 sm:h-64 w-full">
         <Line data={chartData} options={options} />
       </div>
     </div>
