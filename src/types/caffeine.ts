@@ -1,0 +1,90 @@
+export type MetabolicSpeed = 'standard' | 'fast' | 'slow' | 'custom';
+
+export interface MetabolicProfile {
+  type: MetabolicSpeed;
+  label: string;
+  description: string;
+  halfLifeHours: number;
+}
+
+export const METABOLIC_PROFILES: Record<MetabolicSpeed, MetabolicProfile> = {
+  standard: {
+    type: 'standard',
+    label: '標準体質（成人平均）',
+    description: '半減期 約4.0時間（一般的な成人の代謝速度）',
+    halfLifeHours: 4.0,
+  },
+  fast: {
+    type: 'fast',
+    label: '速い（喫煙者・高活性）',
+    description: '半減期 約2.5時間（CYP1A2誘導・分解が早い）',
+    halfLifeHours: 2.5,
+  },
+  slow: {
+    type: 'slow',
+    label: '遅い（敏感・低活性）',
+    description: '半減期 約6.0時間（カフェインが抜けにくい・ピル服用等）',
+    halfLifeHours: 6.0,
+  },
+  custom: {
+    type: 'custom',
+    label: 'カスタム設定',
+    description: '任意の半減期を指定',
+    halfLifeHours: 4.0,
+  },
+};
+
+export type BeverageCategory = 'nescafe' | 'coffee' | 'energy' | 'tea' | 'soda' | 'custom';
+
+export interface BeveragePreset {
+  id: string;
+  name: string;
+  category: BeverageCategory;
+  powderGrams?: number;
+  caffeineMg: number;
+  brand?: string;
+  description?: string;
+  waterMl?: number;
+  foamMl?: number;
+  color?: string;
+  isNescafeNative?: boolean;
+}
+
+export interface IntakeEvent {
+  id: string;
+  timestamp: string; // ISO 8601 string
+  name: string;
+  category: BeverageCategory;
+  powderGrams?: number;
+  caffeineMg: number;
+  presetId?: string;
+  waterMl?: number;
+  foamMl?: number;
+}
+
+export type SleepStatus = 'SAFE' | 'CAUTION' | 'WARNING';
+
+export interface SleepEvaluation {
+  status: SleepStatus;
+  label: string;
+  color: string;
+  bgColor: string;
+  borderColor: string;
+  description: string;
+}
+
+export interface ChartDataPoint {
+  time: Date;
+  timeLabel: string;
+  caffeineMg: number;
+}
+
+export interface SimulationSummary {
+  bedTime: Date;
+  bedCaffeineMg: number;
+  evaluation: SleepEvaluation;
+  totalDailyCaffeineMg: number;
+  hourlyPoints: ChartDataPoint[];
+  maxSafePowderGrams: number;
+  deadlineFor2g: Date;
+}
