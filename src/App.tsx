@@ -24,9 +24,10 @@ const STORAGE_KEY_SETTINGS = 'cafelimit_settings_v4';
 
 const DEFAULT_SETTINGS: AppSettings = {
   maxIntakeUnit: 'powder',
-  deadlinePresetId: 'heiwa-capuchi',
+  deadlinePresetId: 'nescafe-standard-2g',
   confirmBeforeAdd: true,
   customHalfLifeHours: 4.0,
+  safeSleepThresholdMg: 25,
 };
 
 export default function App() {
@@ -162,9 +163,10 @@ export default function App() {
       bedTimeDate,
       halfLifeHours,
       targetPreset ? targetPreset.caffeineMg : 80,
-      targetPreset ? targetPreset.name : '標準2g'
+      targetPreset ? targetPreset.name : '標準2g',
+      settings.safeSleepThresholdMg || 25
     );
-  }, [events, currentTime, bedTimeDate, halfLifeHours, targetPreset]);
+  }, [events, currentTime, bedTimeDate, halfLifeHours, targetPreset, settings.safeSleepThresholdMg]);
 
   // 摂取イベント追加
   const handleAddIntakeEvent = (preset: BeveragePreset) => {
@@ -211,6 +213,36 @@ export default function App() {
 
   const handleDeletePreset = (presetId: string) => {
     setPresets((prev) => prev.filter((p) => p.id !== presetId));
+  };
+
+  const handleResetPresets = () => {
+    setPresets(DEFAULT_NESCAFE_PRESETS);
+    localStorage.setItem(STORAGE_KEY_PRESETS, JSON.stringify(DEFAULT_NESCAFE_PRESETS));
+  };
+
+  const handleResetAllData = () => {
+    localStorage.removeItem(STORAGE_KEY_EVENTS);
+    localStorage.removeItem(STORAGE_KEY_PRESETS);
+    localStorage.removeItem(STORAGE_KEY_BEDTIME);
+    localStorage.removeItem(STORAGE_KEY_SPEED);
+    localStorage.removeItem(STORAGE_KEY_SETTINGS);
+
+    setSettings(DEFAULT_SETTINGS);
+    setPresets(DEFAULT_NESCAFE_PRESETS);
+    setBedTimeStr('23:30');
+    setMetabolicSpeed('standard');
+    const sampleDate = new Date();
+    sampleDate.setHours(8, 0, 0, 0);
+    setEvents([
+      {
+        id: 'sample-morning',
+        timestamp: sampleDate.toISOString(),
+        name: 'ネスカフェ (2.0g)',
+        category: 'nescafe',
+        powderGrams: 2.0,
+        caffeineMg: 80,
+      },
+    ]);
   };
 
   // グラフから空いている時間をタップ ➔ スライダーを合わせてパネルへスクロール
@@ -283,6 +315,7 @@ export default function App() {
             events={events}
             currentTime={currentTime}
             bedTime={bedTimeDate}
+            safeSleepThresholdMg={settings.safeSleepThresholdMg || 25}
             onSelectEventToEdit={(ev) => setEditingEvent(ev)}
             onSelectTimeToBrew={handleSelectTimeToBrew}
           />
@@ -365,6 +398,8 @@ export default function App() {
         settings={settings}
         onChangeSettings={setSettings}
         presets={presets}
+        onResetPresets={handleResetPresets}
+        onResetAllData={handleResetAllData}
       />
 
       {/* パネルタップ時の誤タップ防止確認ダイアログ */}

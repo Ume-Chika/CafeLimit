@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Settings, Coffee, Clock, ShieldCheck, Check } from 'lucide-react';
+import { X, Settings, Coffee, Clock, ShieldCheck, Moon, RefreshCw, Trash2 } from 'lucide-react';
 import type { AppSettings, BeveragePreset } from '../types/caffeine';
 
 interface SettingsModalProps {
@@ -8,6 +8,8 @@ interface SettingsModalProps {
   settings: AppSettings;
   onChangeSettings: (settings: AppSettings) => void;
   presets: BeveragePreset[];
+  onResetPresets?: () => void;
+  onResetAllData?: () => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -16,26 +18,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   settings,
   onChangeSettings,
   presets,
+  onResetPresets,
+  onResetAllData,
 }) => {
   if (!isOpen) return null;
-
-  const unitOptions = [
-    {
-      id: 'powder' as const,
-      label: '粉末量 (g)',
-      desc: 'ネスカフェ粉末グラム数（例: 16.5g）で表示',
-    },
-    {
-      id: 'caffeine' as const,
-      label: 'カフェイン量 (mg)',
-      desc: '純カフェインmg数（例: 660mg）で表示',
-    },
-    {
-      id: 'preset' as const,
-      label: '選択ドリンクの杯数・缶数',
-      desc: '設定中の基準ドリンク換算（例: 約8.2杯 / 4.6缶）で表示',
-    },
-  ];
 
   const handleUnitChange = (unit: AppSettings['maxIntakeUnit']) => {
     onChangeSettings({
@@ -51,11 +37,31 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     });
   };
 
+  const handleThresholdChange = (threshold: number) => {
+    onChangeSettings({
+      ...settings,
+      safeSleepThresholdMg: threshold,
+    });
+  };
+
   const handleToggleConfirm = () => {
     onChangeSettings({
       ...settings,
       confirmBeforeAdd: !settings.confirmBeforeAdd,
     });
+  };
+
+  const handleResetPresetsClick = () => {
+    if (window.confirm('ドリンクパネル一覧を初期状態（ネスカフェ3種）に復元しますか？\n※ご自身で追加・編集したパネルはリセットされます。')) {
+      if (onResetPresets) onResetPresets();
+    }
+  };
+
+  const handleResetAllDataClick = () => {
+    if (window.confirm('⚠️ 【完全初期化】\nすべての摂取履歴、追加したパネル、表示設定をリセットして初期状態に戻しますか？')) {
+      if (onResetAllData) onResetAllData();
+      onClose();
+    }
   };
 
   return (
@@ -72,7 +78,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
             <div>
               <h3 className="text-sm font-black text-stone-900">アプリ表示設定</h3>
-              <p className="text-[11px] text-stone-500">逆算インサイトや操作確認のカスタマイズ</p>
+              <p className="text-[11px] text-stone-500">逆算インサイト・睡眠基準・データ管理</p>
             </div>
           </div>
           <button
@@ -85,54 +91,42 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
 
         {/* 設定フォーム */}
-        <div className="p-4 sm:p-5 space-y-5 text-xs">
-          {/* 1. 「今飲める最大量」の表示単位 */}
-          <div className="space-y-2">
-            <div className="flex items-center space-x-1.5 font-black text-stone-800">
-              <Coffee className="w-4 h-4 text-amber-800" />
-              <span>「今飲める最大量」の表示形式</span>
+        <div className="p-4 sm:p-5 space-y-4 text-xs">
+          {/* 1. 「今飲める最大量」の表示単位（プルダウン統一） */}
+          <div className="p-3 bg-stone-50/70 rounded-2xl border border-stone-200/80 space-y-1.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-1.5 font-black text-stone-800">
+                <Coffee className="w-4 h-4 text-amber-800" />
+                <span>「今飲める最大量」の表示形式</span>
+              </div>
             </div>
-            <div className="space-y-1.5">
-              {unitOptions.map((opt) => {
-                const isSelected = settings.maxIntakeUnit === opt.id;
-                return (
-                  <div
-                    key={opt.id}
-                    onClick={() => handleUnitChange(opt.id)}
-                    className={`p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
-                      isSelected
-                        ? 'bg-amber-50/80 border-amber-800/80 ring-1 ring-amber-700/30'
-                        : 'bg-stone-50/60 border-stone-200/80 hover:bg-stone-100'
-                    }`}
-                  >
-                    <div>
-                      <span className="font-bold text-stone-900 block">{opt.label}</span>
-                      <span className="text-[10px] text-stone-500">{opt.desc}</span>
-                    </div>
-                    {isSelected && (
-                      <div className="w-4 h-4 rounded-full bg-amber-800 text-white flex items-center justify-center shrink-0">
-                        <Check className="w-2.5 h-2.5" />
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+            <p className="text-[10px] text-stone-500">
+              カードに表示する最大許容量の単位を選択します。
+            </p>
+            <select
+              value={settings.maxIntakeUnit}
+              onChange={(e) => handleUnitChange(e.target.value as AppSettings['maxIntakeUnit'])}
+              className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-xs font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+            >
+              <option value="powder">ネスカフェ粉末量 (g)</option>
+              <option value="caffeine">純カフェイン量 (mg)</option>
+              <option value="preset">選択ドリンクの杯数・缶数 (杯/缶)</option>
+            </select>
           </div>
 
-          {/* 2. 「最終時刻」の対象ドリンク選択 */}
-          <div className="space-y-2">
+          {/* 2. 「最終時刻」の対象ドリンク選択（プルダウン） */}
+          <div className="p-3 bg-stone-50/70 rounded-2xl border border-stone-200/80 space-y-1.5">
             <div className="flex items-center space-x-1.5 font-black text-stone-800">
               <Clock className="w-4 h-4 text-sky-700" />
               <span>「最終時刻」の計算対象ドリンク</span>
             </div>
-            <p className="text-[11px] text-stone-500">
-              カードに表示する「◯◯ 最終時刻」の対象プリセットを指定します。
+            <p className="text-[10px] text-stone-500">
+              就寝前デッドライン（◯◯ 最終時刻）を逆算する基準ドリンクを指定します。
             </p>
             <select
               value={settings.deadlinePresetId}
               onChange={(e) => handleDeadlinePresetChange(e.target.value)}
-              className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-xs font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+              className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-xs font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
             >
               {presets.map((preset) => (
                 <option key={preset.id} value={preset.id}>
@@ -142,28 +136,79 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </select>
           </div>
 
-          {/* 3. パネルタップ時の誤タップ防止確認 */}
-          <div className="space-y-2 pt-2 border-t border-stone-100">
-            <div
-              onClick={handleToggleConfirm}
-              className="flex items-center justify-between p-3 rounded-2xl bg-stone-50 border border-stone-200 cursor-pointer hover:bg-stone-100/80 transition-all"
+          {/* 3. 快眠目標閾値（安全上限）の選択（プルダウン） */}
+          <div className="p-3 bg-stone-50/70 rounded-2xl border border-stone-200/80 space-y-1.5">
+            <div className="flex items-center space-x-1.5 font-black text-stone-800">
+              <Moon className="w-4 h-4 text-emerald-700" />
+              <span>快眠安全基準（就寝時残存上限）</span>
+            </div>
+            <p className="text-[10px] text-stone-500">
+              就寝時に目指すカフェイン残存量の上限を指定します。
+            </p>
+            <select
+              value={settings.safeSleepThresholdMg || 25}
+              onChange={(e) => handleThresholdChange(Number(e.target.value))}
+              className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-xs font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
             >
-              <div>
-                <span className="font-bold text-stone-900 block">パネルタップ時の確認ダイアログ</span>
-                <span className="text-[10px] text-stone-500">誤タップによる即時追加を防ぎます</span>
-              </div>
-              <input
-                type="checkbox"
-                checked={settings.confirmBeforeAdd}
-                onChange={handleToggleConfirm}
-                className="w-4 h-4 accent-amber-800 cursor-pointer"
+              <option value={15}>敏感・厳格 (15mg以下で快眠)</option>
+              <option value={25}>標準・EFSA基準 (25mg以下で快眠 / 推奨)</option>
+              <option value={35}>寛容・耐性あり (35mg以下で快眠)</option>
+              <option value={50}>高耐性 (50mg以下で快眠)</option>
+            </select>
+          </div>
+
+          {/* 4. パネルタップ時の確認ダイアログ（スタイリッシュトグル） */}
+          <div
+            onClick={handleToggleConfirm}
+            className="p-3 bg-stone-50/70 rounded-2xl border border-stone-200/80 flex items-center justify-between cursor-pointer hover:bg-stone-100/80 transition-all select-none"
+          >
+            <div>
+              <span className="font-bold text-stone-900 block text-xs">パネルタップ時の確認ダイアログ</span>
+              <span className="text-[10px] text-stone-500">誤タップによる即時追加を防ぎます</span>
+            </div>
+            <div
+              className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out ${
+                settings.confirmBeforeAdd ? 'bg-amber-800' : 'bg-stone-300'
+              }`}
+            >
+              <div
+                className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
+                  settings.confirmBeforeAdd ? 'translate-x-5' : 'translate-x-0'
+                }`}
               />
             </div>
           </div>
 
-          {/* 4. 商標表記・法的免責事項 */}
-          <div className="p-3 bg-stone-100/70 rounded-2xl border border-stone-200/80 space-y-1.5 text-[10px] text-stone-500 leading-relaxed">
-            <div className="flex items-center space-x-1 font-bold text-stone-700">
+          {/* 5. データ管理・リセット */}
+          <div className="p-3.5 bg-stone-100/60 rounded-2xl border border-stone-200/80 space-y-2.5">
+            <div className="font-black text-stone-800 flex items-center space-x-1.5 text-xs">
+              <RefreshCw className="w-3.5 h-3.5 text-stone-600" />
+              <span>データ管理・復元</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={handleResetPresetsClick}
+                className="p-2 bg-white hover:bg-stone-50 border border-stone-200 rounded-xl font-bold text-[11px] text-stone-700 flex items-center justify-center space-x-1 transition-all active:scale-95 cursor-pointer shadow-2xs"
+              >
+                <RefreshCw className="w-3 h-3 text-stone-500" />
+                <span>パネル初期化</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleResetAllDataClick}
+                className="p-2 bg-white hover:bg-red-50 border border-red-200 rounded-xl font-bold text-[11px] text-red-600 flex items-center justify-center space-x-1 transition-all active:scale-95 cursor-pointer shadow-2xs"
+              >
+                <Trash2 className="w-3 h-3 text-red-500" />
+                <span>全データ初期化</span>
+              </button>
+            </div>
+          </div>
+
+          {/* 6. 商標表記・法的免責事項 */}
+          <div className="p-3 bg-stone-100/70 rounded-2xl border border-stone-200/80 space-y-1 text-[10px] text-stone-500 leading-relaxed">
+            <div className="flex items-center space-x-1 font-bold text-stone-700 mb-0.5">
               <ShieldCheck className="w-3.5 h-3.5" />
               <span>商標および免責事項</span>
             </div>
