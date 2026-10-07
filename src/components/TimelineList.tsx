@@ -2,18 +2,20 @@ import React from 'react';
 import type { IntakeEvent } from '../types/caffeine';
 import { format, isToday, isYesterday } from 'date-fns';
 import { ja } from 'date-fns/locale';
-import { Trash2, History, Coffee, Zap, Droplets, Sparkles } from 'lucide-react';
+import { Trash2, History, Coffee, Zap, Droplets, Sparkles, Edit2 } from 'lucide-react';
 
 interface TimelineListProps {
   events: IntakeEvent[];
   onDeleteEvent: (id: string) => void;
   onClearAll: () => void;
+  onSelectEventToEdit?: (event: IntakeEvent) => void;
 }
 
 export const TimelineList: React.FC<TimelineListProps> = ({
   events,
   onDeleteEvent,
   onClearAll,
+  onSelectEventToEdit,
 }) => {
   // 時系列順（新しい順に表示）
   const sortedEvents = [...events].sort(
@@ -62,7 +64,7 @@ export const TimelineList: React.FC<TimelineListProps> = ({
           <button
             type="button"
             onClick={onClearAll}
-            className="text-[11px] font-semibold text-stone-600 hover:text-red-600 transition-colors flex items-center space-x-1 hover:bg-stone-100 px-2 py-1 rounded-lg"
+            className="text-[11px] font-semibold text-stone-600 hover:text-red-600 transition-colors flex items-center space-x-1 hover:bg-stone-100 px-2 py-1 rounded-lg cursor-pointer"
           >
             <Trash2 className="w-3.5 h-3.5" />
             <span>全件クリア</span>
@@ -86,7 +88,8 @@ export const TimelineList: React.FC<TimelineListProps> = ({
           {sortedEvents.map((event) => (
             <div
               key={event.id}
-              className="flex items-center justify-between p-3 rounded-2xl bg-stone-50/80 hover:bg-stone-100/80 border border-stone-200/60 transition-all group"
+              onClick={() => onSelectEventToEdit && onSelectEventToEdit(event)}
+              className="flex items-center justify-between p-3 rounded-2xl bg-stone-50/80 hover:bg-stone-100/90 border border-stone-200/60 transition-all group cursor-pointer"
             >
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 rounded-xl bg-white border border-stone-200 flex items-center justify-center shadow-xs">
@@ -94,7 +97,7 @@ export const TimelineList: React.FC<TimelineListProps> = ({
                 </div>
                 <div>
                   <div className="flex items-center space-x-2">
-                    <h4 className="text-xs font-bold text-stone-800">
+                    <h4 className="text-xs font-bold text-stone-800 group-hover:text-amber-900 transition-colors">
                       {event.name}
                     </h4>
                     {event.powderGrams !== undefined && (
@@ -110,14 +113,30 @@ export const TimelineList: React.FC<TimelineListProps> = ({
                 </div>
               </div>
 
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2">
                 <span className="text-xs font-black font-mono text-amber-900 bg-amber-100/90 px-2 py-1 rounded-lg">
                   +{event.caffeineMg} mg
                 </span>
+                {onSelectEventToEdit && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSelectEventToEdit(event);
+                    }}
+                    className="text-stone-400 hover:text-amber-700 p-1.5 rounded-lg hover:bg-stone-200/70 transition-all opacity-70 group-hover:opacity-100 cursor-pointer"
+                    title="編集"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
                 <button
                   type="button"
-                  onClick={() => onDeleteEvent(event.id)}
-                  className="text-stone-400 hover:text-red-500 p-1.5 rounded-lg hover:bg-stone-200/70 transition-all opacity-70 group-hover:opacity-100"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDeleteEvent(event.id);
+                  }}
+                  className="text-stone-400 hover:text-red-500 p-1.5 rounded-lg hover:bg-stone-200/70 transition-all opacity-70 group-hover:opacity-100 cursor-pointer"
                   title="削除"
                 >
                   <Trash2 className="w-3.5 h-3.5" />

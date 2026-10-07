@@ -249,6 +249,7 @@ export default function App() {
             events={events}
             onDeleteEvent={handleDeleteEvent}
             onClearAll={handleClearAllEvents}
+            onSelectEventToEdit={(ev) => setEditingEvent(ev)}
           />
         </section>
       </main>

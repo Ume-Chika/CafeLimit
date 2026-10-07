@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { X, Trash2, Check, Clock, Coffee } from 'lucide-react';
+import { X, Trash2, Check, Coffee } from 'lucide-react';
 import type { IntakeEvent } from '../types/caffeine';
-import { format } from 'date-fns';
+import { TimeSliderPicker } from './TimeSliderPicker';
 
 interface EditEventModalProps {
   isOpen: boolean;
@@ -44,21 +44,18 @@ const EditEventModalContent: React.FC<EditEventModalContentProps> = ({
   onUpdateEvent,
   onDeleteEvent,
 }) => {
-  const [timeStr, setTimeStr] = useState(() => format(new Date(event.timestamp), 'HH:mm'));
+  const [selectedTime, setSelectedTime] = useState<Date>(() => new Date(event.timestamp));
   const [caffeineMg, setCaffeineMg] = useState(() => event.caffeineMg);
   const [powderGrams, setPowderGrams] = useState(() => event.powderGrams ?? 2.0);
   const [name, setName] = useState(() => event.name);
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    const [hStr, mStr] = timeStr.split(':');
-    const updatedDate = new Date(event.timestamp);
-    updatedDate.setHours(parseInt(hStr, 10), parseInt(mStr, 10), 0, 0);
 
     const updated: IntakeEvent = {
       ...event,
       name,
-      timestamp: updatedDate.toISOString(),
+      timestamp: selectedTime.toISOString(),
       caffeineMg: Number(caffeineMg),
       powderGrams: event.category === 'nescafe' ? Number(powderGrams) : event.powderGrams,
     };
@@ -73,13 +70,13 @@ const EditEventModalContent: React.FC<EditEventModalContentProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-xs animate-fadeIn">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-stone-900/60 backdrop-blur-xs animate-fadeIn">
       <div
-        className="bg-white rounded-3xl shadow-xl border border-stone-200 w-full max-w-sm overflow-hidden flex flex-col"
+        className="bg-white rounded-3xl shadow-xl border border-stone-200 w-full max-w-md max-h-[90vh] overflow-y-auto flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ヘッダー */}
-        <div className="p-4 border-b border-stone-100 flex items-center justify-between bg-stone-50/60">
+        <div className="p-4 border-b border-stone-100 flex items-center justify-between bg-stone-50/60 sticky top-0 bg-white/95 backdrop-blur-xs z-10">
           <div className="flex items-center space-x-2">
             <div className="w-8 h-8 rounded-xl bg-amber-700 text-white flex items-center justify-center shadow-xs">
               <Coffee className="w-4 h-4" />
@@ -99,19 +96,13 @@ const EditEventModalContent: React.FC<EditEventModalContentProps> = ({
         </div>
 
         {/* フォーム */}
-        <form onSubmit={handleSave} className="p-5 space-y-4 text-xs">
-          {/* 摂取時刻 */}
-          <div>
-            <label className="block text-stone-600 font-bold mb-1 flex items-center space-x-1">
-              <Clock className="w-3.5 h-3.5 text-stone-400" />
-              <span>摂取時刻</span>
-            </label>
-            <input
-              type="time"
-              required
-              value={timeStr}
-              onChange={(e) => setTimeStr(e.target.value)}
-              className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 font-mono font-bold text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+        <form onSubmit={handleSave} className="p-4 sm:p-5 space-y-4 text-xs">
+          {/* 摂取時刻スライダー（メイン画面と完全統一） */}
+          <div className="space-y-1">
+            <TimeSliderPicker
+              selectedTime={selectedTime}
+              onChangeTime={setSelectedTime}
+              baseTime={new Date(event.timestamp)}
             />
           </div>
 
