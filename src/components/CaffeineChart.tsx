@@ -39,6 +39,15 @@ interface CaffeineChartProps {
   onFocusBedTime?: () => void;
 }
 
+interface SelectedPointInfo {
+  xPx: number;
+  yPx: number;
+  time: Date;
+  timeLabel: string;
+  caffeineMg: number;
+  event?: IntakeEvent;
+}
+
 export const CaffeineChart: React.FC<CaffeineChartProps> = ({
   points,
   events,
@@ -51,13 +60,8 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const chartRef = useRef<any>(null);
 
-  // グラフ上でタップ選択された時間と残存量の情報
-  const [selectedPointInfo, setSelectedPointInfo] = useState<{
-    time: Date;
-    timeLabel: string;
-    caffeineMg: number;
-    event?: IntakeEvent;
-  } | null>(null);
+  // グラフ上でタップ選択された時間と残存量の情報（座標付き）
+  const [selectedPointInfo, setSelectedPointInfo] = useState<SelectedPointInfo | null>(null);
 
   const { labels, dataValues, eventAnnotations } = useMemo(() => {
     const lbls = points.map((p) => p.timeLabel);
@@ -161,11 +165,12 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
           display: true,
           content: `就寝 (${format(bedTime, 'HH:mm')})`,
           position: 'top',
-          backgroundColor: 'rgba(109, 40, 217, 0.9)',
+          backgroundColor: 'rgba(109, 40, 217, 0.95)',
           color: '#ffffff',
           font: { size: 10, weight: 'bold' },
           padding: 3,
           borderRadius: 4,
+          cursor: 'pointer',
         },
       };
     }
@@ -187,26 +192,38 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
       const clickedP = points[idx];
       if (clickedP) {
         const pointMs = clickedP.time.getTime();
-        // 厳密に一致するイベントを検索（前後5分以内）
+        // 厳密に一致するイベントを検索（前後10分以内）
         const matchedEvent = events.find((e) => {
           const evMs = new Date(e.timestamp).getTime();
-          return Math.abs(evMs - pointMs) <= 5 * 60 * 1000;
+          return Math.abs(evMs - pointMs) <= 10 * 60 * 1000;
         });
 
-        if (matchedEvent) {
-          onSelectEventToEdit(matchedEvent);
-          return;
-        }
+        const rawXPx = chart.scales.x.getPixelForValue(idx);
+        const rawYPx = chart.scales.y.getPixelForValue(clickedP.caffeineMg);
+        const chartWidth = chart.width || 320;
+        const xPx = Math.max(90, Math.min(rawXPx, chartWidth - 90));
+        const yPx = Math.max(15, rawYPx);
+
+        setSelectedPointInfo({
+          xPx,
+          yPx,
+          time: clickedP.time,
+          timeLabel: format(clickedP.time, 'M/d(E) HH:mm'),
+          caffeineMg: clickedP.caffeineMg,
+          event: matchedEvent,
+        });
+        return;
       }
     }
 
     // 2. 線や空白エリアのクリック
     const rect = chart.canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
+    const clickX = event.clientX - rect.left;
     const xAxis = chart.scales.x;
-    if (!xAxis) return;
+    const yAxis = chart.scales.y;
+    if (!xAxis || !yAxis) return;
 
-    const val = xAxis.getValueForPixel(x);
+    const val = xAxis.getValueForPixel(clickX);
     if (typeof val !== 'number') return;
 
     const targetIndex = Math.max(0, Math.min(points.length - 1, Math.round(val)));
@@ -215,21 +232,30 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
 
     const pointMs = clickedPoint.time.getTime();
 
-    // 就寝ライン近辺（10分以内）をクリックした場合
+    // 就寝ライン近辺（12分以内）をクリックした場合、就寝時刻変更ピッカーを直結起動
     const bedMs = bedTime.getTime();
-    if (Math.abs(pointMs - bedMs) <= 10 * 60 * 1000 && onFocusBedTime) {
+    if (Math.abs(pointMs - bedMs) <= 12 * 60 * 1000 && onFocusBedTime) {
       onFocusBedTime();
+      setSelectedPointInfo(null);
       return;
     }
 
-    // 正確に一致する既存イベントがあるか（前後5分）
+    // 正確に一致する既存イベントがあるか（前後10分）
     const matchedEvent = events.find((e) => {
       const evMs = new Date(e.timestamp).getTime();
-      return Math.abs(evMs - pointMs) <= 5 * 60 * 1000;
+      return Math.abs(evMs - pointMs) <= 10 * 60 * 1000;
     });
 
-    // 選択情報ポップアップを表示（誤タップ防止：ボタンを押して初めて移動）
+    const rawXPx = xAxis.getPixelForValue(targetIndex);
+    const rawYPx = yAxis.getPixelForValue(clickedPoint.caffeineMg);
+    const chartWidth = chart.width || 320;
+    const xPx = Math.max(90, Math.min(rawXPx, chartWidth - 90));
+    const yPx = Math.max(15, rawYPx);
+
+    // インタラクティブな吹き出しポップオーバーを表示
     setSelectedPointInfo({
+      xPx,
+      yPx,
       time: clickedPoint.time,
       timeLabel: format(clickedPoint.time, 'M/d(E) HH:mm'),
       caffeineMg: clickedPoint.caffeineMg,
@@ -267,7 +293,7 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
           // イベント発生時刻の点のみ大きくプロット
           const hasEvent = events.some((e) => {
             const evTime = new Date(e.timestamp).getTime();
-            return Math.abs(evTime - pointTime) <= 5 * 60 * 1000;
+            return Math.abs(evTime - pointTime) <= 10 * 60 * 1000;
           });
           return hasEvent ? 6 : 0;
         },
@@ -291,39 +317,9 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
       legend: {
         display: false,
       },
+      // 標準のキャンバスツールチップは無効化し、完全一体型のHTML吹き出しを使用
       tooltip: {
-        backgroundColor: 'rgba(28, 25, 23, 0.95)',
-        titleColor: '#F59E0B',
-        bodyColor: '#FFFFFF',
-        titleFont: { size: 11, weight: 'bold' },
-        bodyFont: { size: 11, weight: 'normal' },
-        padding: 8,
-        cornerRadius: 8,
-        displayColors: false,
-        callbacks: {
-          title: (items) => {
-            if (!items.length) return '';
-            const idx = items[0].dataIndex;
-            const pTime = points[idx]?.time;
-            return pTime ? `${format(pTime, 'M/d(E) HH:mm')}` : `時刻: ${items[0].label}`;
-          },
-          label: (item) => {
-            return `体内残存: ${item.parsed.y} mg`;
-          },
-          afterLabel: (item) => {
-            const idx = item.dataIndex;
-            const pTime = points[idx]?.time?.getTime();
-            if (!pTime) return '';
-            const matched = events.filter((e) => {
-              const evTime = new Date(e.timestamp).getTime();
-              return Math.abs(evTime - pTime) <= 5 * 60 * 1000;
-            });
-            if (matched.length > 0) {
-              return matched.map((e) => `☕ ${e.name} (+${e.caffeineMg}mg) [タップで編集]`).join('\n');
-            }
-            return '';
-          },
-        },
+        enabled: false,
       },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       annotation: {
@@ -358,6 +354,8 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
     },
   };
 
+  const isNearTop = selectedPointInfo ? selectedPointInfo.yPx < 110 : false;
+
   return (
     <div className="bg-white rounded-3xl p-4 sm:p-5 shadow-xs border border-stone-200/90 space-y-2 relative">
       <div className="flex items-center justify-between">
@@ -377,57 +375,96 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
         </div>
       </div>
 
-      {/* グラフキャンバス */}
-      <div className="h-56 sm:h-64 w-full cursor-pointer relative">
+      {/* グラフキャンバス & 一体型フローティング吹き出し */}
+      <div className="h-56 sm:h-64 w-full cursor-pointer relative select-none">
         <Line ref={chartRef} data={chartData} options={options} onClick={handleChartClick} />
-      </div>
 
-      {/* タップした位置のインタラクティブInfoバナー（誤タップ防止） */}
-      {selectedPointInfo && (
-        <div className="bg-stone-900/95 text-white p-2.5 sm:p-3 rounded-2xl flex items-center justify-between shadow-lg border border-stone-700 animate-fadeIn">
-          <div className="flex items-center space-x-2 text-xs">
-            <span className="font-mono font-black text-amber-400">{selectedPointInfo.timeLabel}</span>
-            <span className="text-stone-300">残存: {selectedPointInfo.caffeineMg}mg</span>
-            {selectedPointInfo.event && (
-              <span className="text-amber-300 font-bold">（{selectedPointInfo.event.name}）</span>
-            )}
-          </div>
+        {/* グラフ内ピン留めインタラクティブ吹き出し（二重表示を解消し、ボタンを完全一体化） */}
+        {selectedPointInfo && (
+          <div
+            className="absolute z-30 pointer-events-auto transition-all animate-fadeIn"
+            style={{
+              left: `${selectedPointInfo.xPx}px`,
+              top: isNearTop
+                ? `${selectedPointInfo.yPx + 12}px`
+                : `${selectedPointInfo.yPx - 10}px`,
+              transform: isNearTop ? 'translate(-50%, 0)' : 'translate(-50%, -100%)',
+            }}
+          >
+            <div className="bg-stone-900/95 text-white text-xs rounded-2xl p-2.5 shadow-2xl border border-stone-700 min-w-[165px] max-w-[210px] backdrop-blur-md space-y-1.5 relative">
+              {/* 吹き出しのアロー */}
+              {isNearTop ? (
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-6 border-x-transparent border-b-6 border-b-stone-900/95"></div>
+              ) : (
+                <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-6 border-x-transparent border-t-6 border-t-stone-900/95"></div>
+              )}
 
-          <div className="flex items-center space-x-2">
-            {selectedPointInfo.event ? (
-              <button
-                type="button"
-                onClick={() => {
-                  if (selectedPointInfo.event) {
-                    onSelectEventToEdit(selectedPointInfo.event);
+              {/* ヘッダー：時刻 ＆ 閉じるボタン */}
+              <div className="flex items-center justify-between border-b border-stone-800 pb-1">
+                <span className="font-mono font-bold text-amber-400 text-[11px]">
+                  {selectedPointInfo.timeLabel}
+                </span>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setSelectedPointInfo(null);
-                  }
-                }}
-                className="px-2.5 py-1 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-lg transition-all"
-              >
-                編集・削除
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={handleConfirmAddAtTime}
-                className="px-3 py-1 bg-sky-600 hover:bg-sky-500 text-white font-black text-xs rounded-lg flex items-center space-x-1 shadow-xs transition-all active:scale-95 cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>この時間に追加</span>
-              </button>
-            )}
+                  }}
+                  className="text-stone-400 hover:text-white p-0.5 rounded-full"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
 
-            <button
-              type="button"
-              onClick={() => setSelectedPointInfo(null)}
-              className="text-stone-400 hover:text-white p-1 rounded-full"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
+              {/* 残存カフェイン量 */}
+              <div className="flex items-baseline justify-between pt-0.5">
+                <span className="text-[11px] text-stone-300">体内残存:</span>
+                <span className="font-mono font-black text-sm text-white">
+                  {selectedPointInfo.caffeineMg} <span className="text-[10px] font-normal text-stone-400">mg</span>
+                </span>
+              </div>
+
+              {/* イベント情報がある場合 */}
+              {selectedPointInfo.event && (
+                <div className="bg-amber-950/60 border border-amber-800/40 rounded-lg px-2 py-1 text-[11px] text-amber-200 font-medium">
+                  ☕ {selectedPointInfo.event.name} (+{selectedPointInfo.event.caffeineMg}mg)
+                </div>
+              )}
+
+              {/* アクションボタン */}
+              <div className="pt-1">
+                {selectedPointInfo.event ? (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (selectedPointInfo.event) {
+                        onSelectEventToEdit(selectedPointInfo.event);
+                        setSelectedPointInfo(null);
+                      }
+                    }}
+                    className="w-full py-1.5 bg-amber-600 hover:bg-amber-500 active:scale-95 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer text-center"
+                  >
+                    ✏️ 編集・削除
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleConfirmAddAtTime();
+                    }}
+                    className="w-full py-1.5 bg-sky-600 hover:bg-sky-500 active:scale-95 text-white font-black text-xs rounded-xl flex items-center justify-center space-x-1 shadow-xs transition-all cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>この時間に追加</span>
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

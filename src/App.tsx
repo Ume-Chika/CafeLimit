@@ -169,11 +169,11 @@ export default function App() {
     }
   };
 
-  // グラフから就寝線をタップ ➔ 上部就寝設定へスクロール
+  // グラフから就寝線をタップ ➔ 就寝時刻ピッカーを直接起動
   const handleFocusBedTime = () => {
-    const el = document.getElementById('sleep-safety-section');
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const btn = document.getElementById('bedtime-picker-button');
+    if (btn) {
+      btn.click();
     }
   };
 
