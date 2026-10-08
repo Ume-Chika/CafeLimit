@@ -40,10 +40,6 @@ export const MetabolicModal: React.FC<MetabolicModalProps> = ({
     custom: '半減期を1.0〜12.0時間の間で自由に微調整します。',
   };
 
-  const weightScale = bodyWeightKg / 60;
-  const effectiveSafe = Number((safeSleepThresholdMg * weightScale).toFixed(1));
-  const effectiveFocus = Number((75 * weightScale).toFixed(1));
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3.5 sm:p-4 bg-stone-900/60 backdrop-blur-xs animate-fadeIn">
       <div
@@ -74,14 +70,9 @@ export const MetabolicModal: React.FC<MetabolicModalProps> = ({
         <div className="p-4 sm:p-5 space-y-3.5 text-xs">
           {/* 1. 体重 */}
           <div className="p-3 bg-stone-50/70 rounded-2xl border border-stone-200/80 space-y-1.5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-1.5 font-black text-stone-800">
-                <Weight className="w-4 h-4 text-sky-700" />
-                <span>体重</span>
-              </div>
-              <span className="text-[10px] text-sky-800 font-mono font-bold bg-sky-100/70 px-2 py-0.5 rounded-full">
-                快眠上限 {effectiveSafe}mg / 集中 {effectiveFocus}mg
-              </span>
+            <div className="flex items-center space-x-1.5 font-black text-stone-800">
+              <Weight className="w-4 h-4 text-sky-700" />
+              <span>体重</span>
             </div>
             <p className="text-[10px] text-stone-500 leading-normal">
               体重に応じて血中濃度スケールと快眠・警戒・集中ラインが連動します。
@@ -159,7 +150,7 @@ export const MetabolicModal: React.FC<MetabolicModalProps> = ({
           <div className="p-3 bg-stone-50/70 rounded-2xl border border-stone-200/80 space-y-1.5">
             <div className="flex items-center space-x-1.5 font-black text-stone-800">
               <Moon className="w-4 h-4 text-emerald-700" />
-              <span>快眠安全基準（基準体格60kg換算）</span>
+              <span>快眠安全基準</span>
             </div>
             <p className="text-[10px] text-stone-500">
               就寝時に目指す体内残存カフェインの上限です。
@@ -169,10 +160,10 @@ export const MetabolicModal: React.FC<MetabolicModalProps> = ({
               onChange={(e) => onChangeSafeSleepThreshold(Number(e.target.value))}
               className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-xs font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer"
             >
-              <option value={15}>厳格 15mg以下（実効 {Number((15 * weightScale).toFixed(1))}mg）</option>
-              <option value={25}>標準 25mg以下・推奨（実効 {Number((25 * weightScale).toFixed(1))}mg）</option>
-              <option value={35}>寛容 35mg以下（実効 {Number((35 * weightScale).toFixed(1))}mg）</option>
-              <option value={50}>高耐性 50mg以下（実効 {Number((50 * weightScale).toFixed(1))}mg）</option>
+              <option value={15}>厳格 15mg以下</option>
+              <option value={25}>標準 25mg以下（推奨）</option>
+              <option value={35}>寛容 35mg以下</option>
+              <option value={50}>高耐性 50mg以下</option>
             </select>
           </div>
 

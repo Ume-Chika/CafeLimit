@@ -73,17 +73,17 @@ export const SleepSafetyCard: React.FC<SleepSafetyCardProps> = ({
   return (
     <div id="sleep-safety-section" className="bg-white rounded-3xl shadow-sm border border-stone-200/90 overflow-hidden space-y-0">
       {/* 上部ヘッダー：設定コントロールバー */}
-      <div className="bg-[#241C18] text-stone-200 px-3 sm:px-6 py-2 flex items-center justify-between gap-2">
+      <div className="bg-[#241C18] text-stone-200 px-3.5 sm:px-6 py-2 flex items-center justify-between gap-2">
         {/* 就寝時刻（タップでOS標準の直感的なタイムピッカーが確実に起動） */}
         <label
           htmlFor="bedtime-picker-input"
-          className="relative flex items-center bg-stone-800/90 hover:bg-stone-700/90 active:scale-95 text-white px-2.5 py-1.5 rounded-xl border border-stone-700 transition-all cursor-pointer group shadow-xs select-none shrink-0"
+          className="relative flex items-center space-x-1.5 bg-stone-800/90 hover:bg-stone-700/90 active:scale-95 text-white px-3 py-1.5 rounded-xl border border-stone-700 transition-all cursor-pointer group shadow-xs select-none shrink-0"
           title="タップして就寝時刻を変更"
         >
-          <Moon className="w-3.5 h-3.5 text-amber-400 group-hover:rotate-12 transition-transform mr-1.5 shrink-0" />
-          <span className="text-[11px] text-stone-300 font-medium mr-1">就寝:</span>
-          <span className="font-mono font-black text-xs text-amber-300 tracking-wide mr-1.5">{bedTime}</span>
-          <span className="text-[9px] bg-stone-700 text-stone-300 px-1 py-0.5 rounded font-bold">変更</span>
+          <Moon className="w-3.5 h-3.5 text-amber-400 group-hover:rotate-12 transition-transform shrink-0" />
+          <span className="text-[11px] text-stone-300 font-medium">就寝</span>
+          <span className="font-mono font-black text-xs text-white tracking-wide">{bedTime}</span>
+          <ChevronRight className="w-3.5 h-3.5 text-stone-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
 
           {/* ネイティブ input を前面に透明で重ね、タップを100%直接検知 */}
           <input
@@ -96,21 +96,21 @@ export const SleepSafetyCard: React.FC<SleepSafetyCardProps> = ({
           />
         </label>
 
-        {/* シミュレーション・体質設定（体重・代謝速度・快眠基準・飲用時間） */}
+        {/* シミュレーション・体質設定（体重・代謝速度） */}
         <button
           type="button"
           onClick={onOpenMetabolicModal}
-          className="flex items-center space-x-1 sm:space-x-1.5 bg-stone-800/90 hover:bg-stone-700/90 active:scale-95 text-white px-2.5 py-1.5 rounded-xl border border-stone-700 text-[11px] font-bold transition-all cursor-pointer group shadow-xs select-none truncate"
-          title="タップしてシミュレーション・体質設定（体重・代謝速度・快眠基準・飲用時間）を変更"
+          className="flex items-center space-x-1.5 bg-stone-800/90 hover:bg-stone-700/90 active:scale-95 text-white px-3 py-1.5 rounded-xl border border-stone-700 text-[11px] font-bold transition-all cursor-pointer group shadow-xs select-none truncate"
+          title="タップして体重・体質・シミュレーション設定を変更"
         >
           <Activity className="w-3.5 h-3.5 text-amber-400 group-hover:rotate-12 transition-transform shrink-0" />
-          <span className="text-stone-300 font-normal hidden xs:inline">体質:</span>
-          <span className="text-amber-200">{currentProfile.shortLabel}</span>
-          <span className="text-[10px] text-stone-500 font-normal">/</span>
-          <span className="text-sky-300 font-mono">{settings.bodyWeightKg ?? 60}kg</span>
-          <span className="text-[10px] text-stone-500 font-normal">/</span>
-          <span className="text-emerald-300 font-mono">{safeTh}mg</span>
-          <ChevronRight className="w-3 h-3 text-stone-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+          <span className="text-stone-300 font-medium hidden xs:inline">体質・体重</span>
+          <span className="font-mono font-bold text-white">{settings.bodyWeightKg ?? 60}kg</span>
+          <span className="text-stone-500 font-normal">/</span>
+          <span className="text-stone-200 font-bold">
+            {metabolicSpeed === 'custom' ? `${settings.customHalfLifeHours.toFixed(1)}h` : currentProfile.label.split('（')[0]}
+          </span>
+          <ChevronRight className="w-3.5 h-3.5 text-stone-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
         </button>
       </div>
 
