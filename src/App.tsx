@@ -277,9 +277,6 @@ export default function App() {
             <h1 className="text-base font-black tracking-tight text-stone-900">
               CafeLimit
             </h1>
-            <span className="text-[10px] font-bold bg-[#EADDC9] text-stone-900 px-2 py-0.5 rounded-full">
-              主要ドリンク対応*
-            </span>
           </div>
 
           <div className="flex items-center space-x-1 sm:space-x-2">
