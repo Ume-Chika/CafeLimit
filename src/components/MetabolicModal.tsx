@@ -136,14 +136,9 @@ export const MetabolicModal: React.FC<MetabolicModalProps> = ({
 
           {/* 3. 体重 */}
           <div className="p-3 bg-stone-50/70 rounded-2xl border border-stone-200/80 space-y-1.5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-1.5 font-black text-stone-800">
-                <Weight className="w-4 h-4 text-sky-700" />
-                <span>体重</span>
-              </div>
-              <span className="text-[11px] font-mono font-black text-sky-900 bg-sky-100/80 px-2 py-0.5 rounded-md">
-                {bodyWeightKg} kg
-              </span>
+            <div className="flex items-center space-x-1.5 font-black text-stone-800">
+              <Weight className="w-4 h-4 text-sky-700" />
+              <span>体重</span>
             </div>
             <p className="text-[10px] text-stone-500 leading-normal">
               体重が軽い方ほど同じ摂取量で血中濃度が高くなります。
@@ -158,14 +153,17 @@ export const MetabolicModal: React.FC<MetabolicModalProps> = ({
                 onChange={(e) => onChangeBodyWeight && onChangeBodyWeight(Number(e.target.value))}
                 className="flex-1 h-1.5 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-sky-700"
               />
-              <input
-                type="number"
-                min="30"
-                max="150"
-                value={bodyWeightKg}
-                onChange={(e) => onChangeBodyWeight && onChangeBodyWeight(Number(e.target.value))}
-                className="w-16 bg-white border border-stone-200 rounded-xl px-2 py-1 text-xs font-mono font-bold text-center text-stone-900 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
-              />
+              <div className="flex items-center space-x-1 bg-white border border-stone-200 rounded-xl px-2 py-1">
+                <input
+                  type="number"
+                  min="30"
+                  max="150"
+                  value={bodyWeightKg}
+                  onChange={(e) => onChangeBodyWeight && onChangeBodyWeight(Number(e.target.value))}
+                  className="w-10 text-xs font-mono font-bold text-center text-stone-900 focus:outline-none"
+                />
+                <span className="text-[11px] font-mono font-bold text-stone-500">kg</span>
+              </div>
             </div>
           </div>
 
@@ -183,12 +181,12 @@ export const MetabolicModal: React.FC<MetabolicModalProps> = ({
               onChange={(e) => onChangeDrinkingDuration && onChangeDrinkingDuration(Number(e.target.value))}
               className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-xs font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20 cursor-pointer"
             >
-              <option value={10}>10分（マグカップ）</option>
+              <option value={10}>10分</option>
               <option value={20}>20分</option>
               <option value={30}>30分</option>
               <option value={40}>40分</option>
               <option value={50}>50分</option>
-              <option value={60}>1時間（タンブラー）</option>
+              <option value={60}>1時間</option>
             </select>
           </div>
         </div>

@@ -208,19 +208,19 @@ const EditPresetModalContent: React.FC<EditPresetModalContentProps> = ({
               onChange={(e) => setDrinkingDurationMinutes(Number(e.target.value))}
               className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20 cursor-pointer"
             >
-              <option value={10}>10分（標準・マグカップ1杯）</option>
+              <option value={10}>10分</option>
               <option value={20}>20分</option>
               <option value={30}>30分</option>
               <option value={45}>45分</option>
-              <option value={60}>1時間（タンブラーなど）</option>
+              <option value={60}>1時間</option>
               <option value={90}>1.5時間</option>
               <option value={120}>2時間</option>
               <option value={180}>3時間</option>
-              <option value={240}>4時間（午前／午後かけて）</option>
+              <option value={240}>4時間</option>
               <option value={360}>6時間</option>
-              <option value={480}>8時間（勤務時間中）</option>
-              <option value={720}>12時間（ラボ・デスク作業でチビチビ）</option>
-              <option value={1440}>24時間（1日中かけて飲む）</option>
+              <option value={480}>8時間</option>
+              <option value={720}>12時間</option>
+              <option value={1440}>24時間</option>
             </select>
           </div>
 
