@@ -352,6 +352,7 @@ export default function App() {
             onSelectPresetToEdit={(p) => setEditingPreset(p)}
             onSelectPresetToConfirm={(p) => setConfirmingPreset(p)}
             confirmBeforeAdd={settings.confirmBeforeAdd}
+            defaultDrinkingDuration={settings.drinkingDurationMinutes || 10}
           />
         </section>
 
@@ -435,6 +436,7 @@ export default function App() {
           }
         }}
         onClose={() => setConfirmingPreset(null)}
+        defaultDrinkingDuration={settings.drinkingDurationMinutes || 10}
       />
 
       {/* パネル編集モーダル */}
