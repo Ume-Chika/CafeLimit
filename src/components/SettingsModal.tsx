@@ -178,7 +178,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
             <div
               className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out ${
-                settings.showFocusZone ? 'bg-yellow-400' : 'bg-stone-300'
+                settings.showFocusZone ? 'bg-amber-800' : 'bg-stone-300'
               }`}
             >
               <div
