@@ -6,6 +6,8 @@ import {
   evaluateSleepImpact,
   runSimulation,
   cleanOldEvents,
+  getUpcomingBedTime,
+  calculateTotalCaffeineAt,
 } from '../src/utils/caffeineEngine.ts';
 
 function assert(condition, message) {
@@ -121,5 +123,50 @@ assert(summary.bedCaffeineMg > 0, 'Bed caffeine should be positive');
 assert(summary.maxSafeCaffeineMg > 0, 'Max safe caffeine should be positive');
 assert(summary.deadlineForTarget instanceof Date, 'Deadline should be a valid Date');
 console.log('✅ Test 5 Passed: runSimulation integration verified!');
+
+// Test 6: getUpcomingBedTime parsing & overnight boundary test
+const testCurrentDay = new Date('2026-10-08T15:00:00.000');
+const bed0000 = getUpcomingBedTime(testCurrentDay, '00:00');
+assert(bed0000.getHours() === 0 && bed0000.getMinutes() === 0, `Bedtime 00:00 should have hour 0, min 0 (got ${bed0000.getHours()}:${bed0000.getMinutes()})`);
+assert(bed0000.getDate() === 9, `Bedtime 00:00 from 15:00 should roll to next day (got date ${bed0000.getDate()})`);
+
+const bed2300 = getUpcomingBedTime(testCurrentDay, '23:00');
+assert(bed2300.getHours() === 23 && bed2300.getMinutes() === 0, `Bedtime 23:00 should have hour 23, min 0 (got ${bed2300.getHours()}:${bed2300.getMinutes()})`);
+
+const bed0130 = getUpcomingBedTime(testCurrentDay, '01:30');
+assert(bed0130.getHours() === 1 && bed0130.getMinutes() === 30, `Bedtime 01:30 should have hour 1, min 30`);
+
+const testMidnight = new Date('2026-10-09T01:00:00.000');
+const bedTonight0230 = getUpcomingBedTime(testMidnight, '02:30');
+assert(bedTonight0230.getDate() === 9 && bedTonight0230.getHours() === 2 && bedTonight0230.getMinutes() === 30, `Bedtime 02:30 from 01:00 should be same morning`);
+console.log('✅ Test 6 Passed: getUpcomingBedTime correctly parses all hour/minute combinations without corruption!');
+
+// Test 7: Multi-drink in-progress linear superposition
+// Event 1 at 13:00 (142mg, duration 10m), Event 2 at 13:05 (142mg, duration 10m)
+const ev1Time = new Date('2026-10-08T13:00:00.000Z');
+const ev2Time = new Date('2026-10-08T13:05:00.000Z');
+const evOverlapping = [
+  { id: 'm1', timestamp: ev1Time.toISOString(), name: 'Monster 1', category: 'energy', caffeineMg: 142 },
+  { id: 'm2', timestamp: ev2Time.toISOString(), name: 'Monster 2', category: 'energy', caffeineMg: 142 },
+];
+// At 13:08 (during both drinking intervals):
+const checkTime1 = new Date('2026-10-08T13:08:00.000Z');
+const remainingDuring = calculateTotalCaffeineAt(evOverlapping, checkTime1, 4.0, true, 10);
+// At 23:30 (bedtime):
+const remainingBed = calculateTotalCaffeineAt(evOverlapping, baseBedTime, 4.0, true, 10);
+assert(remainingDuring > 0, 'Remaining during drinking must be positive');
+assert(remainingBed > 0, 'Remaining at bedtime must be positive');
+// Each drink at bedtime should independently contribute ~142 * alpha * 2^(-dt/4)
+const single1AtBed = calculateRemainingCaffeine(142, (baseBedTime.getTime() - ev1Time.getTime()) / 3600000, 4.0, true, 10);
+const single2AtBed = calculateRemainingCaffeine(142, (baseBedTime.getTime() - ev2Time.getTime()) / 3600000, 4.0, true, 10);
+assertClose(remainingBed, single1AtBed + single2AtBed, 0.001, 'Superposition must strictly equal sum of individual events');
+console.log('✅ Test 7 Passed: Multi-drink overlapping continuous superposition is strictly additive!');
+
+// Test 8: Duration = 0 vs Duration = 10 difference
+const alpha0 = getOralAbsorptionAlpha(4.0, 0);
+const alpha10 = getOralAbsorptionAlpha(4.0, 10);
+assert(alpha0 < alpha10, `Alpha for dur=0 (${alpha0}) should be smaller than dur=10 (${alpha10})`);
+assertClose(alpha0, 4.5 / (4.5 - Math.LN2 / 4.0), 0.0001, 'Alpha for dur=0 must equal ka / (ka - ke)');
+console.log('✅ Test 8 Passed: Duration = 0 cleanly separates instantaneous Bateman from duration integration!');
 
 console.log('🎉 ALL MATHEMATICAL PRECISION TESTS PASSED SUCCESSFULLY! 🎉');

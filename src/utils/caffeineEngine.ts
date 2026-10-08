@@ -18,9 +18,11 @@ export function cleanOldEvents(events: IntakeEvent[], baseDate: Date = new Date(
  * 「今夜の就寝」として、今日の朝起きてから夜寝るまでの時間軸を正確に合わせる
  */
 export function getUpcomingBedTime(currentTime: Date, bedTimeStr: string): Date {
-  const [hStr, mStr] = bedTimeStr.split(':');
-  const hours = parseInt(hStr, 10) || 23;
-  const minutes = parseInt(mStr, 10) || 30;
+  const [hStr, mStr] = (bedTimeStr || '23:30').split(':');
+  const parsedH = parseInt(hStr, 10);
+  const parsedM = parseInt(mStr, 10);
+  const hours = isNaN(parsedH) ? 23 : parsedH;
+  const minutes = isNaN(parsedM) ? 30 : parsedM;
 
   const bedDate = new Date(currentTime);
   bedDate.setHours(hours, minutes, 0, 0);
@@ -98,7 +100,8 @@ export function calculateRemainingCaffeine(
   // ka: 経口吸収速度定数 (約 4.5 /h => 吸収半減期 約9分)
   const ka = 4.5;
   const ke = Math.LN2 / halfLifeHours;
-  const Td = Math.max(0, (drinkingDurationMinutes || 10) / 60);
+  const duration = drinkingDurationMinutes ?? 10;
+  const Td = Math.max(0, duration / 60);
 
   if (Td < 0.01) {
     if (Math.abs(ka - ke) < 0.0001) {
@@ -155,7 +158,8 @@ export function calculateTotalCaffeineAt(
 export function getOralAbsorptionAlpha(halfLifeHours: number, drinkingDurationMinutes: number = 10): number {
   const ka = 4.5;
   const ke = Math.LN2 / halfLifeHours;
-  const Td = Math.max(0, (drinkingDurationMinutes || 10) / 60);
+  const duration = drinkingDurationMinutes ?? 10;
+  const Td = Math.max(0, duration / 60);
 
   if (Math.abs(ka - ke) < 0.0001) {
     return 1;
