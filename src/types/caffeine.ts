@@ -97,6 +97,7 @@ export interface SimulationSummary {
   maxSafePowderGrams: number;
   maxSafeCaffeineMg: number;
   deadlineForTarget: Date;
+  isDeadlinePassed: boolean;
   targetPresetName: string;
   safeSleepThresholdMg: number;
 }

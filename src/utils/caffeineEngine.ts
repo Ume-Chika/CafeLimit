@@ -329,6 +329,7 @@ export function runSimulation(
   const maxSafeCaffeineMg = calculateMaxSafeCaffeineMg(events, currentTime, bedTime, halfLifeHours, safeThresholdMg, drinkingDurationMinutes);
   const effectiveTargetDuration = targetDurationMinutes !== undefined ? targetDurationMinutes : drinkingDurationMinutes;
   const deadlineForTarget = calculateDeadlineForDose(events, targetDoseMg, bedTime, halfLifeHours, safeThresholdMg, effectiveTargetDuration);
+  const isDeadlinePassed = deadlineForTarget.getTime() <= currentTime.getTime() || maxSafeCaffeineMg <= 0;
 
   return {
     bedTime,
@@ -339,6 +340,7 @@ export function runSimulation(
     maxSafePowderGrams,
     maxSafeCaffeineMg,
     deadlineForTarget,
+    isDeadlinePassed,
     targetPresetName: targetName,
     safeSleepThresholdMg: safeThresholdMg,
   };

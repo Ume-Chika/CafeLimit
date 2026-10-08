@@ -193,8 +193,8 @@ export const SleepSafetyCard: React.FC<SleepSafetyCardProps> = ({
           </div>
 
           {/* 逆算②：指定ドリンクの最終時刻 */}
-          <div className="bg-[#F0F5FA] rounded-2xl p-3.5 border border-sky-900/10 flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-sky-700 text-white flex items-center justify-center shrink-0 shadow-xs">
+          <div className={`${summary.isDeadlinePassed ? 'bg-stone-100/70 border-stone-200/80' : 'bg-[#F0F5FA] border-sky-900/10'} rounded-2xl p-3.5 border flex items-center space-x-3 transition-colors`}>
+            <div className={`w-10 h-10 rounded-xl ${summary.isDeadlinePassed ? 'bg-stone-400' : 'bg-sky-700'} text-white flex items-center justify-center shrink-0 shadow-xs transition-colors`}>
               <Clock className="w-5 h-5" />
             </div>
             <div>
@@ -202,10 +202,12 @@ export const SleepSafetyCard: React.FC<SleepSafetyCardProps> = ({
                 {targetPresetName} 最終時刻
               </span>
               <div className="flex items-baseline space-x-1">
-                <span className="text-xl font-black font-mono text-sky-950">
-                  {format(deadlineForTarget, 'HH:mm')}
+                <span className={`text-xl font-black font-mono ${summary.isDeadlinePassed ? 'text-stone-400' : 'text-sky-950'}`}>
+                  {summary.isDeadlinePassed ? '--:--' : format(deadlineForTarget, 'HH:mm')}
                 </span>
-                <span className="text-[11px] font-semibold text-stone-600">まで</span>
+                {!summary.isDeadlinePassed && (
+                  <span className="text-[11px] font-semibold text-stone-600">まで</span>
+                )}
               </div>
             </div>
           </div>
