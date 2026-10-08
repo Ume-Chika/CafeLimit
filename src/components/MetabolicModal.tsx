@@ -34,10 +34,10 @@ export const MetabolicModal: React.FC<MetabolicModalProps> = ({
   if (!isOpen) return null;
 
   const speedDescriptions: Record<MetabolicSpeed, string> = {
-    standard: '成人平均の代謝速度です（CYP1A2活性標準）。一般的な体質の方に推奨されます。',
-    fast: '肝代謝酵素 CYP1A2 の活性が高い方、喫煙習慣がある方（分解速度が約1.5倍高速）。',
-    slow: 'カフェインで眠れなくなりやすい方、ピル服用中、妊娠中、CYP1A2活性が低めの方。',
-    custom: '体感に合わせて半減期を1.0〜12.0時間の間で自由に微調整します。',
+    standard: '成人平均の代謝速度です。一般的な体質の方に推奨されます。',
+    fast: '分解速度が速い体質です。喫煙習慣がある方など。',
+    slow: '分解速度が遅い体質です。カフェインで眠れなくなりやすい方など。',
+    custom: '半減期を1.0〜12.0時間の間で自由に微調整します。',
   };
 
   return (
@@ -66,34 +66,34 @@ export const MetabolicModal: React.FC<MetabolicModalProps> = ({
           </button>
         </div>
 
-        {/* 設定フォーム（アプリ表示設定と完全に統一されたデザインシステム） */}
+        {/* 設定フォーム */}
         <div className="p-4 sm:p-5 space-y-3.5 text-xs">
-          {/* 1. 快眠安全基準（就寝時残存上限） */}
+          {/* 1. 快眠安全基準 */}
           <div className="p-3 bg-stone-50/70 rounded-2xl border border-stone-200/80 space-y-1.5">
             <div className="flex items-center space-x-1.5 font-black text-stone-800">
               <Moon className="w-4 h-4 text-emerald-700" />
-              <span>快眠安全基準（就寝時残存上限）</span>
+              <span>快眠安全基準</span>
             </div>
             <p className="text-[10px] text-stone-500">
-              就寝時に目指すカフェイン残存量の上限を指定します。
+              就寝時に目指す体内残存カフェインの上限です。
             </p>
             <select
               value={safeSleepThresholdMg || 25}
               onChange={(e) => onChangeSafeSleepThreshold(Number(e.target.value))}
               className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-xs font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer"
             >
-              <option value={15}>敏感・厳格 (就寝時 15mg以下)</option>
-              <option value={25}>標準バランス (就寝時 25mg以下 / 推奨)</option>
-              <option value={35}>寛容・耐性あり (就寝時 35mg以下)</option>
-              <option value={50}>高耐性 (就寝時 50mg以下)</option>
+              <option value={15}>厳格 15mg以下</option>
+              <option value={25}>標準 25mg以下（推奨）</option>
+              <option value={35}>寛容 35mg以下</option>
+              <option value={50}>高耐性 50mg以下</option>
             </select>
           </div>
 
-          {/* 2. 代謝体質（半減期）の選択 */}
+          {/* 2. 代謝体質 */}
           <div className="p-3 bg-stone-50/70 rounded-2xl border border-stone-200/80 space-y-1.5">
             <div className="flex items-center space-x-1.5 font-black text-stone-800">
               <Activity className="w-4 h-4 text-amber-800" />
-              <span>代謝体質（消失半減期）</span>
+              <span>代謝体質</span>
             </div>
             <p className="text-[10px] text-stone-500">
               {speedDescriptions[selectedSpeed]}
@@ -103,10 +103,10 @@ export const MetabolicModal: React.FC<MetabolicModalProps> = ({
               onChange={(e) => onChangeSpeed(e.target.value as MetabolicSpeed)}
               className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-xs font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20 cursor-pointer"
             >
-              <option value="standard">標準体質（成人平均・4.0時間）</option>
-              <option value="fast">速い（喫煙者・高活性・2.5時間）</option>
-              <option value="slow">遅い（敏感・低活性・6.0時間）</option>
-              <option value="custom">カスタム設定（自由指定）</option>
+              <option value="standard">標準 4.0時間</option>
+              <option value="fast">速い 2.5時間</option>
+              <option value="slow">遅い 6.0時間</option>
+              <option value="custom">カスタム自由指定</option>
             </select>
 
             {/* カスタム指定時のスライダー */}
@@ -126,27 +126,27 @@ export const MetabolicModal: React.FC<MetabolicModalProps> = ({
                   className="w-full h-1.5 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-amber-800"
                 />
                 <div className="flex justify-between text-[9px] font-mono text-stone-400">
-                  <span>1.0h (超高速)</span>
-                  <span>4.0h (平均)</span>
-                  <span>12.0h (極遅)</span>
+                  <span>1.0h 速い</span>
+                  <span>4.0h 平均</span>
+                  <span>12.0h 遅い</span>
                 </div>
               </div>
             )}
           </div>
 
-          {/* 3. 体重設定（薬物動態希釈容量） */}
+          {/* 3. 体重 */}
           <div className="p-3 bg-stone-50/70 rounded-2xl border border-stone-200/80 space-y-1.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-1.5 font-black text-stone-800">
                 <Weight className="w-4 h-4 text-sky-700" />
-                <span>体重（kg）</span>
+                <span>体重</span>
               </div>
               <span className="text-[11px] font-mono font-black text-sky-900 bg-sky-100/80 px-2 py-0.5 rounded-md">
                 {bodyWeightKg} kg
               </span>
             </div>
             <p className="text-[10px] text-stone-500 leading-normal">
-              小柄な方ほど同じカフェイン摂取量で最高血中濃度（Cmax）が高くなります。
+              体重が軽い方ほど同じ摂取量で血中濃度が高くなります。
             </p>
             <div className="flex items-center space-x-2 pt-0.5">
               <input
@@ -169,31 +169,26 @@ export const MetabolicModal: React.FC<MetabolicModalProps> = ({
             </div>
           </div>
 
-          {/* 4. 1杯を飲むのにかかる時間（デフォルト飲用時間） */}
+          {/* 4. 飲むのにかかる時間 */}
           <div className="p-3 bg-stone-50/70 rounded-2xl border border-stone-200/80 space-y-1.5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-1.5 font-black text-stone-800">
-                <Clock className="w-4 h-4 text-amber-700" />
-                <span>1杯を飲むのにかかる時間（デフォルト）</span>
-              </div>
-              <span className="text-[11px] font-mono font-black text-amber-900 bg-amber-100/80 px-2 py-0.5 rounded-md">
-                {drinkingDurationMinutes} 分
-              </span>
+            <div className="flex items-center space-x-1.5 font-black text-stone-800">
+              <Clock className="w-4 h-4 text-amber-700" />
+              <span>飲むのにかかる時間</span>
             </div>
             <p className="text-[10px] text-stone-500 leading-normal">
-              ドリンク追加時の初期値です（個別パネル・記録の編集で10分〜24時間まで変更可能）。
+              ドリンク追加時の初期値です。個別パネルや記録編集で変更できます。
             </p>
             <select
               value={drinkingDurationMinutes}
               onChange={(e) => onChangeDrinkingDuration && onChangeDrinkingDuration(Number(e.target.value))}
               className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-xs font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20 cursor-pointer"
             >
-              <option value={10}>10分（標準・マグカップ1杯）</option>
+              <option value={10}>10分（マグカップ）</option>
               <option value={20}>20分</option>
               <option value={30}>30分</option>
               <option value={40}>40分</option>
               <option value={50}>50分</option>
-              <option value={60}>60分（1時間）</option>
+              <option value={60}>1時間（タンブラー）</option>
             </select>
           </div>
         </div>
