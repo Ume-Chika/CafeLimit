@@ -145,22 +145,57 @@ export function calculateTotalCaffeineAt(
 }
 
 /**
- * 今（currentTime）飲んだ場合に、就寝時刻（bedTime）で安全閾値（25mg）以下に収まる最大許容量
+ * 経口吸収Batemanモデル & 飲用時間連続投与における長時間漸近補正係数 α
+ *
+ * 吸収終了後 (t >> T_d, t >> 1/ka) において、残存カフェイン量は
+ * C(t) ≈ α * initialMg * 2^(-t / halfLifeHours)
+ * に漸近する。
+ * α = (ka / (ka - ke)) * ((exp(ke * Td) - 1) / (ke * Td))
+ */
+export function getOralAbsorptionAlpha(halfLifeHours: number, drinkingDurationMinutes: number = 10): number {
+  const ka = 4.5;
+  const ke = Math.LN2 / halfLifeHours;
+  const Td = Math.max(0, (drinkingDurationMinutes || 10) / 60);
+
+  if (Math.abs(ka - ke) < 0.0001) {
+    return 1;
+  }
+
+  const alphaKa = ka / (ka - ke);
+  if (Td < 0.01) {
+    return alphaKa;
+  }
+
+  const alphaTd = (Math.exp(ke * Td) - 1) / (ke * Td);
+  return alphaKa * alphaTd;
+}
+
+/**
+ * 今（currentTime）飲んだ場合に、就寝時刻（bedTime）で安全閾値（25mg等）以下に収まる最大許容量
  */
 export function calculateMaxSafeCaffeineMg(
   currentEvents: IntakeEvent[],
   currentTime: Date,
   bedTime: Date,
   halfLifeHours: number,
-  safeThresholdMg: number = 25
+  safeThresholdMg: number = 25,
+  useOralAbsorption: boolean = false,
+  drinkingDurationMinutes: number = 10
 ): number {
-  const existingAtBed = calculateTotalCaffeineAt(currentEvents, bedTime, halfLifeHours);
+  const existingAtBed = calculateTotalCaffeineAt(
+    currentEvents,
+    bedTime,
+    halfLifeHours,
+    useOralAbsorption,
+    drinkingDurationMinutes
+  );
   const remainingAllowanceAtBed = Math.max(0, safeThresholdMg - existingAtBed);
 
   const hoursToBed = Math.max(0, (bedTime.getTime() - currentTime.getTime()) / (1000 * 60 * 60));
   if (hoursToBed <= 0) return 0;
 
-  const maxInitialMg = remainingAllowanceAtBed * Math.pow(2, hoursToBed / halfLifeHours);
+  const alpha = useOralAbsorption ? getOralAbsorptionAlpha(halfLifeHours, drinkingDurationMinutes) : 1.0;
+  const maxInitialMg = (remainingAllowanceAtBed / alpha) * Math.pow(2, hoursToBed / halfLifeHours);
   return Math.max(0, Math.round(maxInitialMg * 10) / 10);
 }
 
@@ -173,9 +208,19 @@ export function calculateMaxSafePowderGrams(
   bedTime: Date,
   halfLifeHours: number,
   safeThresholdMg: number = 25,
-  caffeinePerGram: number = 40
+  caffeinePerGram: number = 40,
+  useOralAbsorption: boolean = false,
+  drinkingDurationMinutes: number = 10
 ): number {
-  const maxMg = calculateMaxSafeCaffeineMg(currentEvents, currentTime, bedTime, halfLifeHours, safeThresholdMg);
+  const maxMg = calculateMaxSafeCaffeineMg(
+    currentEvents,
+    currentTime,
+    bedTime,
+    halfLifeHours,
+    safeThresholdMg,
+    useOralAbsorption,
+    drinkingDurationMinutes
+  );
   return Math.max(0, Math.round((maxMg / caffeinePerGram) * 10) / 10);
 }
 
@@ -187,16 +232,27 @@ export function calculateDeadlineForDose(
   doseMg: number,
   bedTime: Date,
   halfLifeHours: number,
-  safeThresholdMg: number = 25
+  safeThresholdMg: number = 25,
+  useOralAbsorption: boolean = false,
+  drinkingDurationMinutes: number = 10
 ): Date {
-  const existingAtBed = calculateTotalCaffeineAt(currentEvents, bedTime, halfLifeHours);
+  const existingAtBed = calculateTotalCaffeineAt(
+    currentEvents,
+    bedTime,
+    halfLifeHours,
+    useOralAbsorption,
+    drinkingDurationMinutes
+  );
   const allowedFromThisDose = Math.max(0.1, safeThresholdMg - existingAtBed);
 
-  if (doseMg <= allowedFromThisDose) {
+  const alpha = useOralAbsorption ? getOralAbsorptionAlpha(halfLifeHours, drinkingDurationMinutes) : 1.0;
+  const effectiveDose = alpha * doseMg;
+
+  if (effectiveDose <= allowedFromThisDose) {
     return bedTime;
   }
 
-  const requiredHours = halfLifeHours * (Math.log(doseMg / allowedFromThisDose) / Math.log(2));
+  const requiredHours = halfLifeHours * (Math.log(effectiveDose / allowedFromThisDose) / Math.LN2);
   const deadlineMs = bedTime.getTime() - requiredHours * 60 * 60 * 1000;
 
   return new Date(deadlineMs);
@@ -277,9 +333,9 @@ export function runSimulation(
   const graphEnd = new Date(endMs);
 
   const hourlyPoints = generateSimulationPoints(events, graphStart, graphEnd, halfLifeHours, 15, useOralAbsorption, drinkingDurationMinutes);
-  const maxSafePowderGrams = calculateMaxSafePowderGrams(events, currentTime, bedTime, halfLifeHours, safeThresholdMg);
-  const maxSafeCaffeineMg = calculateMaxSafeCaffeineMg(events, currentTime, bedTime, halfLifeHours, safeThresholdMg);
-  const deadlineForTarget = calculateDeadlineForDose(events, targetDoseMg, bedTime, halfLifeHours, safeThresholdMg);
+  const maxSafePowderGrams = calculateMaxSafePowderGrams(events, currentTime, bedTime, halfLifeHours, safeThresholdMg, 40, useOralAbsorption, drinkingDurationMinutes);
+  const maxSafeCaffeineMg = calculateMaxSafeCaffeineMg(events, currentTime, bedTime, halfLifeHours, safeThresholdMg, useOralAbsorption, drinkingDurationMinutes);
+  const deadlineForTarget = calculateDeadlineForDose(events, targetDoseMg, bedTime, halfLifeHours, safeThresholdMg, useOralAbsorption, drinkingDurationMinutes);
 
   return {
     bedTime,

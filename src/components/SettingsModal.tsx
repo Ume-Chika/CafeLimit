@@ -164,10 +164,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               onChange={(e) => handleThresholdChange(Number(e.target.value))}
               className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-xs font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
             >
-              <option value={15}>敏感・厳格 (15mg以下で快眠)</option>
-              <option value={25}>標準・EFSA基準 (25mg以下で快眠 / 推奨)</option>
-              <option value={35}>寛容・耐性あり (35mg以下で快眠)</option>
-              <option value={50}>高耐性 (50mg以下で快眠)</option>
+              <option value={15}>敏感・厳格 (就寝時 15mg以下)</option>
+              <option value={25}>標準バランス (就寝時 25mg以下 / 推奨)</option>
+              <option value={35}>寛容・耐性あり (就寝時 35mg以下)</option>
+              <option value={50}>高耐性 (就寝時 50mg以下)</option>
             </select>
           </div>
 

@@ -105,8 +105,8 @@ export const CoffeePanelList: React.FC<CoffeePanelListProps> = ({
                     {preset.volumeMl}ml
                   </span>
                 )}
-                <span className="text-xs font-black font-mono text-amber-900 bg-amber-50 px-1.5 py-0.5 rounded-md border border-amber-200/60">
-                  {preset.caffeineMg}mg
+                <span className="text-xs font-black font-mono text-amber-900 bg-amber-50 px-1.5 py-0.5 rounded-md border border-amber-200/60 whitespace-nowrap shrink-0">
+                  +{preset.caffeineMg}mg
                 </span>
               </div>
 
