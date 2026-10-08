@@ -171,14 +171,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           >
             <div>
               <div className="flex items-center space-x-1.5 font-bold text-stone-900 text-xs">
-                <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                <Zap className="w-3.5 h-3.5 text-yellow-500 fill-yellow-400" />
                 <span>日中の集中ゾーン表示 (≥75mg)</span>
               </div>
-              <span className="text-[10px] text-stone-500">EFSA基準の覚醒・集中ブースト域をグラフに表示</span>
+              <span className="text-[10px] text-stone-500">EFSA基準の覚醒・集中ブースト域（経口吸収プロセス連動）をグラフに表示</span>
             </div>
             <div
               className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out ${
-                settings.showFocusZone ? 'bg-amber-500' : 'bg-stone-300'
+                settings.showFocusZone ? 'bg-yellow-400' : 'bg-stone-300'
               }`}
             >
               <div

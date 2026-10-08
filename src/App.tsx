@@ -165,9 +165,10 @@ export default function App() {
       halfLifeHours,
       targetPreset ? targetPreset.caffeineMg : 80,
       targetPreset ? targetPreset.name : '標準2g',
-      settings.safeSleepThresholdMg || 25
+      settings.safeSleepThresholdMg || 25,
+      settings.showFocusZone || false
     );
-  }, [events, currentTime, bedTimeDate, halfLifeHours, targetPreset, settings.safeSleepThresholdMg]);
+  }, [events, currentTime, bedTimeDate, halfLifeHours, targetPreset, settings.safeSleepThresholdMg, settings.showFocusZone]);
 
   // 摂取イベント追加
   const handleAddIntakeEvent = (preset: BeveragePreset) => {
