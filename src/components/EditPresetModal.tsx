@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { X, Trash2, Check, Sparkles } from 'lucide-react';
+import { X, Trash2, Check, Sparkles, Clock, ChevronRight } from 'lucide-react';
 import type { BeveragePreset, BeverageCategory } from '../types/caffeine';
 import { NescafeCoffeeCup } from './NescafeCoffeeCup';
+import { minutesToTimeString, timeStringToMinutes, formatDurationDisplay } from '../utils/caffeineEngine';
 
 interface EditPresetModalProps {
   isOpen: boolean;
@@ -9,6 +10,7 @@ interface EditPresetModalProps {
   onClose: () => void;
   onUpdatePreset: (updated: BeveragePreset) => void;
   onDeletePreset: (presetId: string) => void;
+  defaultDrinkingDuration?: number;
 }
 
 export const EditPresetModal: React.FC<EditPresetModalProps> = ({
@@ -17,6 +19,7 @@ export const EditPresetModal: React.FC<EditPresetModalProps> = ({
   onClose,
   onUpdatePreset,
   onDeletePreset,
+  defaultDrinkingDuration = 10,
 }) => {
   if (!isOpen || !preset) return null;
 
@@ -27,6 +30,7 @@ export const EditPresetModal: React.FC<EditPresetModalProps> = ({
       onClose={onClose}
       onUpdatePreset={onUpdatePreset}
       onDeletePreset={onDeletePreset}
+      defaultDrinkingDuration={defaultDrinkingDuration}
     />
   );
 };
@@ -36,6 +40,7 @@ interface EditPresetModalContentProps {
   onClose: () => void;
   onUpdatePreset: (updated: BeveragePreset) => void;
   onDeletePreset: (presetId: string) => void;
+  defaultDrinkingDuration?: number;
 }
 
 const EditPresetModalContent: React.FC<EditPresetModalContentProps> = ({
@@ -43,6 +48,7 @@ const EditPresetModalContent: React.FC<EditPresetModalContentProps> = ({
   onClose,
   onUpdatePreset,
   onDeletePreset,
+  defaultDrinkingDuration = 10,
 }) => {
   const [name, setName] = useState(preset.name);
   const [category, setCategory] = useState<BeverageCategory>(preset.category);
@@ -50,7 +56,9 @@ const EditPresetModalContent: React.FC<EditPresetModalContentProps> = ({
   const [powderGrams, setPowderGrams] = useState(preset.powderGrams ?? 2.0);
   const [volumeMl, setVolumeMl] = useState(preset.volumeMl ?? 355);
   const [color, setColor] = useState(preset.color ?? '#5C3826');
-  const [drinkingDurationMinutes, setDrinkingDurationMinutes] = useState<number>(preset.drinkingDurationMinutes ?? 10);
+  const [drinkingDurationMinutes, setDrinkingDurationMinutes] = useState<number>(
+    preset.drinkingDurationMinutes ?? defaultDrinkingDuration
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -195,28 +203,34 @@ const EditPresetModalContent: React.FC<EditPresetModalContentProps> = ({
             )}
           </div>
 
-          {/* 飲むのにかかる時間（10分〜24時間） */}
+          {/* 飲むのにかかる時間 */}
           <div>
             <label className="block text-stone-700 font-bold mb-1">飲むのにかかる時間</label>
-            <select
-              value={drinkingDurationMinutes}
-              onChange={(e) => setDrinkingDurationMinutes(Number(e.target.value))}
-              className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20 cursor-pointer"
+            <label
+              htmlFor="preset-drinking-duration-input"
+              className="relative flex items-center justify-between w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2.5 font-bold text-stone-900 cursor-pointer hover:bg-stone-100/80 active:scale-[0.99] transition-all group shadow-2xs"
             >
-              <option value={10}>10分</option>
-              <option value={20}>20分</option>
-              <option value={30}>30分</option>
-              <option value={45}>45分</option>
-              <option value={60}>1時間</option>
-              <option value={90}>1.5時間</option>
-              <option value={120}>2時間</option>
-              <option value={180}>3時間</option>
-              <option value={240}>4時間</option>
-              <option value={360}>6時間</option>
-              <option value={480}>8時間</option>
-              <option value={720}>12時間</option>
-              <option value={1440}>24時間</option>
-            </select>
+              <div className="flex items-center space-x-2">
+                <Clock className="w-3.5 h-3.5 text-stone-400 group-hover:rotate-12 transition-transform shrink-0" />
+                <span className="text-stone-600 font-bold">飲む時間</span>
+              </div>
+              <div className="flex items-center space-x-1.5">
+                <span className="font-mono font-black text-stone-900 bg-white px-2 py-0.5 rounded-lg border border-stone-200 shadow-2xs">
+                  {formatDurationDisplay(drinkingDurationMinutes)}
+                </span>
+                <ChevronRight className="w-3.5 h-3.5 text-stone-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+              </div>
+
+              {/* 透明なネイティブ time input */}
+              <input
+                id="preset-drinking-duration-input"
+                type="time"
+                value={minutesToTimeString(drinkingDurationMinutes)}
+                onChange={(e) => setDrinkingDurationMinutes(timeStringToMinutes(e.target.value))}
+                className="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10 pointer-events-auto"
+                aria-label="飲むのにかかる時間を変更"
+              />
+            </label>
           </div>
 
           {/* カラー選択 */}

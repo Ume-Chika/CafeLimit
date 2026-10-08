@@ -1,6 +1,7 @@
 import React from 'react';
-import { X, Activity, Moon, Weight, Clock, Sliders } from 'lucide-react';
+import { X, Activity, Moon, Weight, Clock, Sliders, ChevronRight } from 'lucide-react';
 import type { MetabolicSpeed } from '../types/caffeine';
+import { minutesToTimeString, timeStringToMinutes, formatDurationDisplay } from '../utils/caffeineEngine';
 
 interface MetabolicModalProps {
   isOpen: boolean;
@@ -176,18 +177,31 @@ export const MetabolicModal: React.FC<MetabolicModalProps> = ({
             <p className="text-[10px] text-stone-500 leading-normal">
               ドリンク追加時の初期値です。個別パネルや記録編集で変更できます。
             </p>
-            <select
-              value={drinkingDurationMinutes}
-              onChange={(e) => onChangeDrinkingDuration && onChangeDrinkingDuration(Number(e.target.value))}
-              className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-xs font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20 cursor-pointer"
+            <label
+              htmlFor="metabolic-drinking-duration-input"
+              className="relative flex items-center justify-between w-full bg-white border border-stone-200 rounded-xl px-3 py-2.5 text-xs font-bold text-stone-900 cursor-pointer hover:bg-stone-50 active:scale-[0.99] transition-all group shadow-2xs"
             >
-              <option value={10}>10分</option>
-              <option value={20}>20分</option>
-              <option value={30}>30分</option>
-              <option value={40}>40分</option>
-              <option value={50}>50分</option>
-              <option value={60}>1時間</option>
-            </select>
+              <div className="flex items-center space-x-2">
+                <Clock className="w-3.5 h-3.5 text-stone-400 group-hover:rotate-12 transition-transform shrink-0" />
+                <span className="text-stone-600 font-bold">飲む時間</span>
+              </div>
+              <div className="flex items-center space-x-1.5">
+                <span className="font-mono font-black text-stone-900 bg-amber-50 text-amber-900 px-2 py-0.5 rounded-lg border border-amber-200/60">
+                  {formatDurationDisplay(drinkingDurationMinutes)}
+                </span>
+                <ChevronRight className="w-3.5 h-3.5 text-stone-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+              </div>
+
+              {/* 透明なネイティブ time input */}
+              <input
+                id="metabolic-drinking-duration-input"
+                type="time"
+                value={minutesToTimeString(drinkingDurationMinutes)}
+                onChange={(e) => onChangeDrinkingDuration && onChangeDrinkingDuration(timeStringToMinutes(e.target.value))}
+                className="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10 pointer-events-auto"
+                aria-label="飲むのにかかる時間を変更"
+              />
+            </label>
           </div>
         </div>
 

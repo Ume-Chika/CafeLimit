@@ -93,37 +93,36 @@ export const TimelineList: React.FC<TimelineListProps> = ({
               onClick={() => onSelectEventToEdit && onSelectEventToEdit(event)}
               className="flex items-center justify-between p-3 rounded-2xl bg-stone-50/80 hover:bg-stone-100/90 border border-stone-200/60 transition-all group cursor-pointer"
             >
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-xl bg-white border border-stone-200 flex items-center justify-center shadow-xs">
+              <div className="flex items-center space-x-3 min-w-0">
+                <div className="w-8 h-8 rounded-xl bg-white border border-stone-200 flex items-center justify-center shadow-xs shrink-0">
                   {getCategoryIcon(event.category)}
                 </div>
-                <div>
-                  <div className="flex items-center space-x-2">
-                    <h4 className="text-xs font-bold text-stone-800 group-hover:text-amber-900 transition-colors">
-                      {event.name}
-                    </h4>
-                    {event.powderGrams !== undefined && event.category === 'nescafe' && (
-                      <span className="text-[10px] text-amber-800 font-semibold bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/60 flex items-center shrink-0 whitespace-nowrap">
-                        <Sparkles className="w-2.5 h-2.5 mr-0.5" />
-                        {event.powderGrams}g
-                      </span>
-                    )}
-                    {event.volumeMl !== undefined && (
-                      <span className="text-[10px] text-stone-600 font-semibold bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200/60 flex items-center shrink-0 whitespace-nowrap">
-                        {event.volumeMl}ml
-                      </span>
-                    )}
-                  </div>
+                <div className="min-w-0">
+                  <h4 className="text-xs font-bold text-stone-800 group-hover:text-amber-900 transition-colors truncate">
+                    {event.name}
+                  </h4>
                   <span className="text-[11px] font-mono text-stone-600">
                     {formatEventDate(event.timestamp)}
                   </span>
                 </div>
               </div>
 
-              <div className="flex items-center space-x-2">
-                <span className="text-xs font-black font-mono text-amber-900 bg-amber-100/90 px-2 py-1 rounded-lg whitespace-nowrap shrink-0">
-                  +{event.caffeineMg} mg
-                </span>
+              <div className="flex items-center space-x-2 shrink-0">
+                <div className="flex flex-col items-end">
+                  {event.powderGrams !== undefined && event.category === 'nescafe' && (
+                    <span className="text-[10px] font-bold text-stone-500 leading-none mb-0.5">
+                      {event.powderGrams}g
+                    </span>
+                  )}
+                  {event.volumeMl !== undefined && (event.powderGrams === undefined || event.category !== 'nescafe') && (
+                    <span className="text-[10px] font-bold text-stone-500 leading-none mb-0.5">
+                      {event.volumeMl}ml
+                    </span>
+                  )}
+                  <span className="text-xs font-black font-mono text-amber-900 bg-amber-100/90 px-2 py-0.5 rounded-lg whitespace-nowrap shrink-0">
+                    +{event.caffeineMg}mg
+                  </span>
+                </div>
                 {onSelectEventToEdit && (
                   <button
                     type="button"

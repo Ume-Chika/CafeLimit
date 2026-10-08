@@ -387,6 +387,7 @@ export default function App() {
         onClose={() => setEditingEvent(null)}
         onUpdateEvent={handleUpdateEvent}
         onDeleteEvent={handleDeleteEvent}
+        defaultDrinkingDuration={settings.drinkingDurationMinutes || 10}
       />
 
       {/* パネル追加モーダル */}
@@ -446,6 +447,7 @@ export default function App() {
         onClose={() => setEditingPreset(null)}
         onUpdatePreset={handleUpdatePreset}
         onDeletePreset={handleDeletePreset}
+        defaultDrinkingDuration={settings.drinkingDurationMinutes || 10}
       />
 
       {/* 科学的根拠モーダル */}
