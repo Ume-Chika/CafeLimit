@@ -463,12 +463,6 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
           <h3 className="text-xs font-black text-stone-900">体内カフェイン推移</h3>
         </div>
         <div className="flex items-center space-x-2 sm:space-x-2.5 text-[10px] font-bold">
-          {showFocusZone && (
-            <span className="flex items-center space-x-1 text-yellow-600 font-black">
-              <span className="inline-block w-2.5 border-b-2 border-dashed border-yellow-500"></span>
-              <span>集中 (&ge;75mg)</span>
-            </span>
-          )}
           <span className="flex items-center space-x-1 text-emerald-700">
             <span className="inline-block w-2.5 border-b-2 border-dashed border-emerald-500"></span>
             <span>快眠 (&le;{safeSleepThresholdMg}mg)</span>
@@ -477,6 +471,12 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
             <span className="inline-block w-2.5 border-b-2 border-dashed border-red-600"></span>
             <span>警戒 (&ge;{safeSleepThresholdMg * 2}mg)</span>
           </span>
+          {showFocusZone && (
+            <span className="flex items-center space-x-1 text-yellow-600 font-black">
+              <span className="inline-block w-2.5 border-b-2 border-dashed border-yellow-500"></span>
+              <span>集中 (&ge;75mg)</span>
+            </span>
+          )}
         </div>
       </div>
 
@@ -585,8 +585,8 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
               {/* 集中ゾーン（設定ON時かつ75mg以上） */}
               {showFocusZone && selectedPointInfo.caffeineMg >= 75 && (
                 <div className="bg-yellow-400/20 border border-yellow-400/50 rounded-lg px-2 py-0.5 text-[10px] text-yellow-300 font-bold flex items-center space-x-1">
-                  <Zap className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-                  <span>⚡ 集中ブースト中 (&ge;75mg)</span>
+                  <Zap className="w-3 h-3 text-yellow-400 shrink-0" />
+                  <span>集中ブースト中 (&ge;75mg)</span>
                 </div>
               )}
 
