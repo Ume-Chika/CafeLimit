@@ -345,3 +345,48 @@ export function runSimulation(
     safeSleepThresholdMg: safeThresholdMg,
   };
 }
+
+/**
+ * 飲用時間（分）を "HH:mm" 形式の文字列に変換
+ */
+export function minutesToTimeString(minutes: number = 10): string {
+  const safeMinutes = Math.max(1, Math.min(1440, Math.round(minutes)));
+  const h = Math.floor(safeMinutes / 60);
+  const m = safeMinutes % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
+
+/**
+ * "HH:mm" 形式の文字列を飲用時間（分）に変換
+ */
+export function timeStringToMinutes(timeStr: string): number {
+  if (!timeStr) return 10;
+  const [hStr, mStr] = timeStr.split(':');
+  const h = parseInt(hStr, 10) || 0;
+  const m = parseInt(mStr, 10) || 0;
+  const total = h * 60 + m;
+  return Math.max(1, Math.min(1440, total));
+}
+
+/**
+ * 飲用時間（分）を日本語表記にフォーマット（例: "10分", "1時間", "1時間30分"）
+ */
+export function formatDurationDisplay(minutes: number = 10): string {
+  if (minutes < 60) return `${minutes}分`;
+  const hours = Math.floor(minutes / 60);
+  const rem = minutes % 60;
+  if (rem === 0) return `${hours}時間`;
+  return `${hours}時間${rem}分`;
+}
+
+/**
+ * 飲用時間（分）を短縮日本語表記にフォーマット（例: "10分", "1時間", "1.5時間"）
+ */
+export function formatDurationShort(minutes: number = 10): string {
+  if (minutes < 60) return `${minutes}分`;
+  const hours = Math.floor(minutes / 60);
+  const rem = minutes % 60;
+  if (rem === 0) return `${hours}時間`;
+  return `${hours}.${Math.round((rem / 60) * 10)}時間`;
+}
+
