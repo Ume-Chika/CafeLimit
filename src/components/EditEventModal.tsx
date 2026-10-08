@@ -156,12 +156,7 @@ const EditEventModalContent: React.FC<EditEventModalContentProps> = ({
 
           {/* 飲むのにかかる時間（10分〜24時間） */}
           <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="text-stone-700 font-bold">飲むのにかかる時間</label>
-              <span className="text-[10px] text-amber-900 font-bold bg-amber-100/80 px-2 py-0.5 rounded">
-                {drinkingDurationMinutes < 60 ? `${drinkingDurationMinutes}分` : `${Math.floor(drinkingDurationMinutes / 60)}時間${drinkingDurationMinutes % 60 ? (drinkingDurationMinutes % 60) + '分' : ''}`}
-              </span>
-            </div>
+            <label className="block text-stone-700 font-bold mb-1">飲むのにかかる時間</label>
             <select
               value={drinkingDurationMinutes}
               onChange={(e) => setDrinkingDurationMinutes(Number(e.target.value))}
