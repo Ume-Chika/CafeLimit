@@ -50,6 +50,7 @@ const EditPresetModalContent: React.FC<EditPresetModalContentProps> = ({
   const [powderGrams, setPowderGrams] = useState(preset.powderGrams ?? 2.0);
   const [volumeMl, setVolumeMl] = useState(preset.volumeMl ?? 355);
   const [color, setColor] = useState(preset.color ?? '#5C3826');
+  const [drinkingDurationMinutes, setDrinkingDurationMinutes] = useState<number>(preset.drinkingDurationMinutes ?? 10);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,6 +62,7 @@ const EditPresetModalContent: React.FC<EditPresetModalContentProps> = ({
       powderGrams: category === 'nescafe' ? Number(powderGrams) : undefined,
       volumeMl: category !== 'nescafe' ? Number(volumeMl) : undefined,
       color,
+      drinkingDurationMinutes: Number(drinkingDurationMinutes),
     };
     onUpdatePreset(updated);
     onClose();
@@ -191,6 +193,35 @@ const EditPresetModalContent: React.FC<EditPresetModalContentProps> = ({
                 />
               </div>
             )}
+          </div>
+
+          {/* 飲むのにかかる時間（10分〜24時間） */}
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-stone-700 font-bold">飲むのにかかる時間</label>
+              <span className="text-[10px] text-amber-900 font-bold bg-amber-100/80 px-2 py-0.5 rounded">
+                {drinkingDurationMinutes < 60 ? `${drinkingDurationMinutes}分` : `${Math.floor(drinkingDurationMinutes / 60)}時間${drinkingDurationMinutes % 60 ? (drinkingDurationMinutes % 60) + '分' : ''}`}
+              </span>
+            </div>
+            <select
+              value={drinkingDurationMinutes}
+              onChange={(e) => setDrinkingDurationMinutes(Number(e.target.value))}
+              className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20 cursor-pointer"
+            >
+              <option value={10}>10分（標準・マグカップ1杯）</option>
+              <option value={20}>20分</option>
+              <option value={30}>30分</option>
+              <option value={45}>45分</option>
+              <option value={60}>1時間（タンブラーなど）</option>
+              <option value={90}>1.5時間</option>
+              <option value={120}>2時間</option>
+              <option value={180}>3時間</option>
+              <option value={240}>4時間（午前／午後かけて）</option>
+              <option value={360}>6時間</option>
+              <option value={480}>8時間（勤務時間中）</option>
+              <option value={720}>12時間（ラボ・デスク作業でチビチビ）</option>
+              <option value={1440}>24時間（1日中かけて飲む）</option>
+            </select>
           </div>
 
           {/* カラー選択 */}

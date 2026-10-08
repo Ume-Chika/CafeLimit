@@ -30,6 +30,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   safeSleepThresholdMg: 25,
   showFocusZone: false,
   drinkingDurationMinutes: 10,
+  bodyWeightKg: 60,
 };
 
 export default function App() {
@@ -168,7 +169,8 @@ export default function App() {
       targetPreset ? targetPreset.name : '標準2g',
       settings.safeSleepThresholdMg || 25,
       settings.showFocusZone || false,
-      settings.drinkingDurationMinutes || 10
+      settings.drinkingDurationMinutes || 10,
+      targetPreset?.drinkingDurationMinutes || settings.drinkingDurationMinutes || 10
     );
   }, [events, currentTime, bedTimeDate, halfLifeHours, targetPreset, settings.safeSleepThresholdMg, settings.showFocusZone, settings.drinkingDurationMinutes]);
 
@@ -183,6 +185,7 @@ export default function App() {
       caffeineMg: preset.caffeineMg,
       volumeMl: preset.volumeMl,
       presetId: preset.id,
+      drinkingDurationMinutes: preset.drinkingDurationMinutes || settings.drinkingDurationMinutes || 10,
     };
 
     setEvents((prev) => cleanOldEvents([...prev, newEvent], currentTime));
@@ -387,7 +390,7 @@ export default function App() {
         existingPresetIds={presets.map((p) => p.id)}
       />
 
-      {/* 代謝体質モーダル */}
+      {/* 代謝体質・シミュレーション設定モーダル */}
       <MetabolicModal
         isOpen={isMetabolicModalOpen}
         onClose={() => setIsMetabolicModalOpen(false)}
@@ -395,6 +398,12 @@ export default function App() {
         onChangeSpeed={setMetabolicSpeed}
         customHalfLifeHours={settings.customHalfLifeHours}
         onChangeCustomHalfLife={(h) => setSettings((s) => ({ ...s, customHalfLifeHours: h }))}
+        safeSleepThresholdMg={settings.safeSleepThresholdMg || 25}
+        onChangeSafeSleepThreshold={(th) => setSettings((s) => ({ ...s, safeSleepThresholdMg: th }))}
+        bodyWeightKg={settings.bodyWeightKg ?? 60}
+        onChangeBodyWeight={(w) => setSettings((s) => ({ ...s, bodyWeightKg: w }))}
+        drinkingDurationMinutes={settings.drinkingDurationMinutes ?? 10}
+        onChangeDrinkingDuration={(d) => setSettings((s) => ({ ...s, drinkingDurationMinutes: d }))}
       />
 
       {/* 設定モーダル */}

@@ -54,6 +54,7 @@ export interface BeveragePreset {
   foamMl?: number;
   color?: string;
   isNescafeNative?: boolean;
+  drinkingDurationMinutes?: number; // 個別飲用時間（分、10分〜1440分[24h]）
 }
 
 export interface IntakeEvent {
@@ -67,6 +68,7 @@ export interface IntakeEvent {
   waterMl?: number;
   volumeMl?: number;
   foamMl?: number;
+  drinkingDurationMinutes?: number; // 個別飲用時間（分、10分〜1440分[24h]）
 }
 
 export type SleepStatus = 'SAFE' | 'CAUTION' | 'WARNING';
@@ -108,5 +110,6 @@ export interface AppSettings {
   customHalfLifeHours: number;
   safeSleepThresholdMg: number; // デフォルト 25mg
   showFocusZone?: boolean; // 日中の集中ゾーン表示（≥75mg、デフォルト false）
-  drinkingDurationMinutes?: number; // 飲み終わるまでにかかる時間（10〜60分、デフォルト10分）
+  drinkingDurationMinutes?: number; // 1杯を飲むのにかかるデフォルト時間（10〜60分、デフォルト10分）
+  bodyWeightKg?: number; // 体重 (kg、デフォルト 60kg)
 }
