@@ -75,7 +75,7 @@ export const ConfirmAddModal: React.FC<ConfirmAddModalProps> = ({
                   {preset.volumeMl}ml
                 </span>
               )}
-              <span className="text-xs font-black font-mono text-amber-900 bg-amber-100 px-2 py-0.5 rounded-lg border border-amber-200/60">
+              <span className="text-xs font-black font-mono text-amber-900 bg-amber-100 px-2 py-0.5 rounded-lg border border-amber-200/60 whitespace-nowrap shrink-0">
                 +{preset.caffeineMg} mg
               </span>
             </div>

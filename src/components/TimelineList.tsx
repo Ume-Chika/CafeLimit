@@ -114,7 +114,7 @@ export const TimelineList: React.FC<TimelineListProps> = ({
               </div>
 
               <div className="flex items-center space-x-2">
-                <span className="text-xs font-black font-mono text-amber-900 bg-amber-100/90 px-2 py-1 rounded-lg">
+                <span className="text-xs font-black font-mono text-amber-900 bg-amber-100/90 px-2 py-1 rounded-lg whitespace-nowrap shrink-0">
                   +{event.caffeineMg} mg
                 </span>
                 {onSelectEventToEdit && (

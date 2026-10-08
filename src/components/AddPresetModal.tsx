@@ -151,7 +151,7 @@ export const AddPresetModal: React.FC<AddPresetModalProps> = ({
         </div>
 
         <div className="flex items-center space-x-1.5 shrink-0 pl-2">
-          <span className="text-xs font-black font-mono text-amber-900 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200/60">
+          <span className="text-xs font-black font-mono text-amber-900 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200/60 whitespace-nowrap shrink-0">
             {opt.caffeineMg} mg
           </span>
           <div

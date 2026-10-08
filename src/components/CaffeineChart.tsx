@@ -47,7 +47,7 @@ interface SelectedPointInfo {
   time: Date;
   timeLabel: string;
   caffeineMg: number;
-  event?: IntakeEvent;
+  events?: IntakeEvent[];
 }
 
 export const CaffeineChart: React.FC<CaffeineChartProps> = ({
@@ -217,16 +217,16 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
 
       const pointMs = targetPoint.time.getTime();
 
-      // 前後10分以内の既存摂取イベント
-      const matchedEvent = events.find((e) => {
+      // 前後15分以内の既存摂取イベント（複数件対応）
+      const matchedEvents = events.filter((e) => {
         const evMs = new Date(e.timestamp).getTime();
-        return Math.abs(evMs - pointMs) <= 10 * 60 * 1000;
+        return Math.abs(evMs - pointMs) <= 15 * 60 * 1000;
       });
 
       const rawXPx = xAxis.getPixelForValue(targetIndex);
       const rawYPx = yAxis.getPixelForValue(targetPoint.caffeineMg);
       const chartWidth = chart.width || 320;
-      const boxXPx = Math.max(95, Math.min(rawXPx, chartWidth - 95));
+      const boxXPx = Math.max(105, Math.min(rawXPx, chartWidth - 105));
       const yPx = Math.max(15, rawYPx);
 
       setSelectedPointInfo({
@@ -236,7 +236,7 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
         time: targetPoint.time,
         timeLabel: format(targetPoint.time, 'M/d(E) HH:mm'),
         caffeineMg: targetPoint.caffeineMg,
-        event: matchedEvent,
+        events: matchedEvents,
       });
     },
     [points, events]
@@ -306,15 +306,15 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
       const clickedP = points[idx];
       if (clickedP) {
         const pointMs = clickedP.time.getTime();
-        const matchedEvent = events.find((e) => {
+        const matchedEvents = events.filter((e) => {
           const evMs = new Date(e.timestamp).getTime();
-          return Math.abs(evMs - pointMs) <= 10 * 60 * 1000;
+          return Math.abs(evMs - pointMs) <= 15 * 60 * 1000;
         });
 
         const rawXPx = chart.scales.x.getPixelForValue(idx);
         const rawYPx = chart.scales.y.getPixelForValue(clickedP.caffeineMg);
         const chartWidth = chart.width || 320;
-        const boxXPx = Math.max(95, Math.min(rawXPx, chartWidth - 95));
+        const boxXPx = Math.max(105, Math.min(rawXPx, chartWidth - 105));
         const yPx = Math.max(15, rawYPx);
 
         setSelectedPointInfo({
@@ -324,7 +324,7 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
           time: clickedP.time,
           timeLabel: format(clickedP.time, 'M/d(E) HH:mm'),
           caffeineMg: clickedP.caffeineMg,
-          event: matchedEvent,
+          events: matchedEvents,
         });
         return;
       }
@@ -364,7 +364,7 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
           // 実際の摂取イベントがある点は常に大きくプロット
           const hasEvent = events.some((e) => {
             const evTime = new Date(e.timestamp).getTime();
-            return Math.abs(evTime - pointTime) <= 10 * 60 * 1000;
+            return Math.abs(evTime - pointTime) <= 15 * 60 * 1000;
           });
           if (hasEvent) return 6;
 
@@ -385,7 +385,7 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
           if (!pointTime) return 0;
           const hasEvent = events.some((e) => {
             const evTime = new Date(e.timestamp).getTime();
-            return Math.abs(evTime - pointTime) <= 10 * 60 * 1000;
+            return Math.abs(evTime - pointTime) <= 15 * 60 * 1000;
           });
           return hasEvent ? 8 : 0;
         },
@@ -537,13 +537,13 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
             onTouchMove={(e) => e.stopPropagation()}
             onTouchEnd={(e) => e.stopPropagation()}
           >
-            <div className="bg-stone-900/95 text-white text-xs rounded-2xl p-2.5 shadow-2xl border border-stone-700 min-w-[170px] max-w-[210px] backdrop-blur-md space-y-1.5 relative">
+            <div className="bg-stone-900/95 text-white text-xs rounded-2xl p-2.5 shadow-2xl border border-stone-700 min-w-[190px] max-w-[240px] backdrop-blur-md space-y-1.5 relative">
               {/* 吹き出しのアロー：選択ポイントの exact X 座標へ先端を精密補正 */}
               {isNearTop ? (
                 <div
                   className="absolute bottom-full w-0 h-0 border-x-6 border-x-transparent border-b-6 border-b-stone-900/95"
                   style={{
-                    left: `calc(50% + ${Math.max(-75, Math.min(75, selectedPointInfo.rawXPx - selectedPointInfo.boxXPx))}px)`,
+                    left: `calc(50% + ${Math.max(-85, Math.min(85, selectedPointInfo.rawXPx - selectedPointInfo.boxXPx))}px)`,
                     transform: 'translateX(-50%)',
                   }}
                 />
@@ -551,7 +551,7 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
                 <div
                   className="absolute top-full w-0 h-0 border-x-6 border-x-transparent border-t-6 border-t-stone-900/95"
                   style={{
-                    left: `calc(50% + ${Math.max(-75, Math.min(75, selectedPointInfo.rawXPx - selectedPointInfo.boxXPx))}px)`,
+                    left: `calc(50% + ${Math.max(-85, Math.min(85, selectedPointInfo.rawXPx - selectedPointInfo.boxXPx))}px)`,
                     transform: 'translateX(-50%)',
                   }}
                 />
@@ -590,30 +590,51 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
                 </div>
               )}
 
-              {/* イベント情報がある場合 */}
-              {selectedPointInfo.event && (
-                <div className="bg-amber-950/60 border border-amber-800/40 rounded-lg px-2 py-1 text-[11px] text-amber-200 font-medium">
-                  ☕ {selectedPointInfo.event.name} (+{selectedPointInfo.event.caffeineMg}mg)
+              {/* イベント情報（単一・複数対応） */}
+              {selectedPointInfo.events && selectedPointInfo.events.length > 0 && (
+                <div className="space-y-1 pt-0.5">
+                  {selectedPointInfo.events.length > 1 && (
+                    <div className="flex items-center justify-between text-[10px] text-amber-300 font-bold px-0.5">
+                      <span>同時間帯 ({selectedPointInfo.events.length}件)</span>
+                      <span>
+                        合計 +{selectedPointInfo.events.reduce((sum, ev) => sum + ev.caffeineMg, 0)}mg
+                      </span>
+                    </div>
+                  )}
+                  <div className="max-h-36 overflow-y-auto space-y-1 pr-0.5">
+                    {selectedPointInfo.events.map((ev) => (
+                      <div
+                        key={ev.id}
+                        className="bg-amber-950/60 border border-amber-800/40 rounded-lg p-1.5 flex items-center justify-between text-[11px] text-amber-200"
+                      >
+                        <div className="min-w-0 flex-1 pr-1.5">
+                          <div className="font-bold truncate text-[11px]">
+                            {ev.category === 'energy' ? '⚡' : ev.category === 'tea' ? '🍵' : '☕'} {ev.name}
+                          </div>
+                          <div className="text-[10px] text-amber-400 font-mono font-semibold">
+                            +{ev.caffeineMg}mg
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onSelectEventToEdit(ev);
+                            setSelectedPointInfo(null);
+                          }}
+                          className="px-2 py-1 bg-amber-600 hover:bg-amber-500 active:scale-95 text-white font-bold text-[10px] rounded-lg shadow-xs transition-all shrink-0 cursor-pointer"
+                        >
+                          ✏️ 編集
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 
               {/* アクションボタン */}
               <div className="pt-1">
-                {selectedPointInfo.event ? (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (selectedPointInfo.event) {
-                        onSelectEventToEdit(selectedPointInfo.event);
-                        setSelectedPointInfo(null);
-                      }
-                    }}
-                    className="w-full py-1.5 bg-amber-600 hover:bg-amber-500 active:scale-95 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer text-center"
-                  >
-                    ✏️ 編集・削除
-                  </button>
-                ) : (
+                {(!selectedPointInfo.events || selectedPointInfo.events.length === 0) ? (
                   <button
                     type="button"
                     onClick={(e) => {
@@ -624,6 +645,18 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>この時間に追加</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleConfirmAddAtTime();
+                    }}
+                    className="w-full py-1 bg-stone-800 hover:bg-stone-700 active:scale-95 text-stone-300 font-bold text-[10px] rounded-lg flex items-center justify-center space-x-1 transition-all cursor-pointer"
+                  >
+                    <Plus className="w-3 h-3" />
+                    <span>さらに追加</span>
                   </button>
                 )}
               </div>
