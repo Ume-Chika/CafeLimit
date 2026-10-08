@@ -178,7 +178,7 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
     }
 
     return { labels: lbls, dataValues: vals, eventAnnotations: annotations };
-  }, [points, currentTime, bedTime]);
+  }, [points, currentTime, bedTime, safeSleepThresholdMg]);
 
   const maxVal = Math.max(...dataValues, 60);
 
@@ -443,19 +443,19 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
         />
       )}
 
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
+      <div className="flex flex-wrap items-center justify-between gap-1.5 pb-0.5">
+        <div className="flex items-center space-x-1.5">
           <Activity className="w-4 h-4 text-amber-800" />
           <h3 className="text-xs font-black text-stone-900">体内カフェイン推移</h3>
         </div>
-        <div className="flex items-center space-x-2.5 text-[10px] font-bold text-stone-500">
-          <span className="flex items-center space-x-1">
-            <span className="inline-block w-3 border-b-2 border-dashed border-emerald-500"></span>
-            <span className="text-emerald-700">快眠安全域 (&le;{safeSleepThresholdMg}mg)</span>
+        <div className="flex items-center space-x-2 sm:space-x-3 text-[10px] font-bold">
+          <span className="flex items-center space-x-1 text-emerald-700">
+            <span className="inline-block w-2.5 border-b-2 border-dashed border-emerald-500"></span>
+            <span>快眠 (&le;{safeSleepThresholdMg}mg)</span>
           </span>
-          <span className="flex items-center space-x-1">
-            <span className="inline-block w-3 border-b-2 border-dashed border-red-500"></span>
-            <span className="text-red-600">覚醒警戒域 (&ge;{safeSleepThresholdMg * 2}mg)</span>
+          <span className="flex items-center space-x-1 text-red-600">
+            <span className="inline-block w-2.5 border-b-2 border-dashed border-red-500"></span>
+            <span>警戒 (&ge;{safeSleepThresholdMg * 2}mg)</span>
           </span>
         </div>
       </div>
