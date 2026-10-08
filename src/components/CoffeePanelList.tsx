@@ -10,6 +10,7 @@ interface CoffeePanelListProps {
   onSelectPresetToEdit?: (preset: BeveragePreset) => void;
   onSelectPresetToConfirm?: (preset: BeveragePreset) => void;
   confirmBeforeAdd?: boolean;
+  defaultDrinkingDuration?: number;
 }
 
 export const CoffeePanelList: React.FC<CoffeePanelListProps> = ({
@@ -19,8 +20,17 @@ export const CoffeePanelList: React.FC<CoffeePanelListProps> = ({
   onSelectPresetToEdit,
   onSelectPresetToConfirm,
   confirmBeforeAdd = true,
+  defaultDrinkingDuration = 10,
 }) => {
   const [justAddedId, setJustAddedId] = useState<string | null>(null);
+
+  const formatDurationShort = (minutes: number = 10): string => {
+    if (minutes < 60) return `${minutes}分`;
+    const hours = Math.floor(minutes / 60);
+    const rem = minutes % 60;
+    if (rem === 0) return `${hours}時間`;
+    return `${hours}.${Math.round((rem / 60) * 10)}時間`;
+  };
 
   const handleCardClick = (preset: BeveragePreset) => {
     if (confirmBeforeAdd && onSelectPresetToConfirm) {
@@ -53,6 +63,7 @@ export const CoffeePanelList: React.FC<CoffeePanelListProps> = ({
         {presets.map((preset) => {
           const isAdded = justAddedId === preset.id;
           const isNative = preset.isNescafeNative;
+          const duration = preset.drinkingDurationMinutes || defaultDrinkingDuration;
 
           return (
             <div
@@ -93,18 +104,16 @@ export const CoffeePanelList: React.FC<CoffeePanelListProps> = ({
                 {preset.name}
               </span>
 
-              {/* カフェイン量・粉末g / 内容量ml */}
-              <div className="mt-1 flex items-center space-x-1">
+              {/* カフェイン量・粉末g / 内容量ml / 飲用時間 */}
+              <div className="mt-1 flex items-center justify-center space-x-1 text-[10px] font-bold text-stone-500">
                 {isNative && preset.powderGrams && (
-                  <span className="text-[11px] font-bold text-stone-500">
-                    {preset.powderGrams}g
-                  </span>
+                  <span>{preset.powderGrams}g</span>
                 )}
                 {preset.volumeMl && (
-                  <span className="text-[10px] font-bold text-stone-500">
-                    {preset.volumeMl}ml
-                  </span>
+                  <span>{preset.volumeMl}ml</span>
                 )}
+                <span className="text-stone-300">/</span>
+                <span className="text-stone-600 font-medium">{formatDurationShort(duration)}</span>
                 <span className="text-xs font-black font-mono text-amber-900 bg-amber-50 px-1.5 py-0.5 rounded-md border border-amber-200/60 whitespace-nowrap shrink-0">
                   +{preset.caffeineMg}mg
                 </span>

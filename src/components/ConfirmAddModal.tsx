@@ -10,6 +10,7 @@ interface ConfirmAddModalProps {
   selectedTime: Date;
   onConfirm: () => void;
   onClose: () => void;
+  defaultDrinkingDuration?: number;
 }
 
 export const ConfirmAddModal: React.FC<ConfirmAddModalProps> = ({
@@ -18,6 +19,7 @@ export const ConfirmAddModal: React.FC<ConfirmAddModalProps> = ({
   selectedTime,
   onConfirm,
   onClose,
+  defaultDrinkingDuration = 10,
 }) => {
   if (!isOpen || !preset) return null;
 
@@ -26,6 +28,16 @@ export const ConfirmAddModal: React.FC<ConfirmAddModalProps> = ({
     if (isTomorrow(selectedTime)) return '明日';
     if (isYesterday(selectedTime)) return '昨日';
     return format(selectedTime, 'M/d');
+  };
+
+  const duration = preset.drinkingDurationMinutes || defaultDrinkingDuration;
+
+  const formatDuration = (minutes: number = 10): string => {
+    if (minutes < 60) return `${minutes}分`;
+    const hours = Math.floor(minutes / 60);
+    const rem = minutes % 60;
+    if (rem === 0) return `${hours}時間`;
+    return `${hours}時間${rem}分`;
   };
 
   return (
@@ -52,7 +64,7 @@ export const ConfirmAddModal: React.FC<ConfirmAddModalProps> = ({
         </div>
 
         {/* コンテンツ */}
-        <div className="p-5 flex flex-col items-center text-center space-y-3">
+        <div className="p-5 flex flex-col items-center text-center space-y-3.5">
           {/* ドリンクグラフィック */}
           <div className="py-2 scale-110">
             <NescafeCoffeeCup
@@ -81,20 +93,23 @@ export const ConfirmAddModal: React.FC<ConfirmAddModalProps> = ({
             </div>
           </div>
 
-          {/* 摂取予定時刻 & 飲用時間バッジ */}
-          <div className="w-full bg-stone-50 border border-stone-200 rounded-2xl p-2.5 space-y-1 text-xs">
-            <div className="flex items-center justify-center space-x-2">
-              <Clock className="w-3.5 h-3.5 text-stone-400" />
-              <span className="text-stone-500 font-bold">摂取開始:</span>
-              <span className="font-mono font-black text-stone-900">
+          {/* 摂取予定時刻 & 飲用時間 */}
+          <div className="w-full bg-stone-50 border border-stone-200 rounded-2xl p-3 space-y-2 text-xs">
+            <div className="flex items-center justify-between px-1.5 text-stone-600 font-bold">
+              <span className="flex items-center space-x-1.5">
+                <Clock className="w-3.5 h-3.5 text-stone-400" />
+                <span>摂取開始</span>
+              </span>
+              <span className="font-mono font-black text-stone-900 text-xs">
                 {getDateLabel()} {format(selectedTime, 'HH:mm')}
               </span>
             </div>
-            {preset.drinkingDurationMinutes && preset.drinkingDurationMinutes > 10 && (
-              <div className="text-[11px] text-amber-800 font-bold bg-amber-100/60 rounded-lg py-0.5 px-2">
-                飲用時間: {preset.drinkingDurationMinutes < 60 ? `${preset.drinkingDurationMinutes}分` : `${Math.floor(preset.drinkingDurationMinutes / 60)}時間${preset.drinkingDurationMinutes % 60 ? (preset.drinkingDurationMinutes % 60) + '分' : ''}`} かけて飲む
-              </div>
-            )}
+            <div className="flex items-center justify-between px-1.5 text-stone-600 font-bold border-t border-stone-200/60 pt-2">
+              <span>飲む時間</span>
+              <span className="font-bold text-amber-900 bg-amber-100/80 px-2 py-0.5 rounded-lg text-[11px]">
+                約 {formatDuration(duration)} かけて飲む
+              </span>
+            </div>
           </div>
         </div>
 
