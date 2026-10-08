@@ -40,6 +40,10 @@ export const MetabolicModal: React.FC<MetabolicModalProps> = ({
     custom: '半減期を1.0〜12.0時間の間で自由に微調整します。',
   };
 
+  const weightScale = bodyWeightKg / 60;
+  const effectiveSafe = Number((safeSleepThresholdMg * weightScale).toFixed(1));
+  const effectiveFocus = Number((75 * weightScale).toFixed(1));
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3.5 sm:p-4 bg-stone-900/60 backdrop-blur-xs animate-fadeIn">
       <div
@@ -54,7 +58,7 @@ export const MetabolicModal: React.FC<MetabolicModalProps> = ({
             </div>
             <div>
               <h3 className="text-sm font-black text-stone-900">シミュレーション・体質設定</h3>
-              <p className="text-[11px] text-stone-500">快眠基準・代謝速度・体重・飲用時間</p>
+              <p className="text-[11px] text-stone-500">体重・代謝速度・快眠基準・飲用時間</p>
             </div>
           </div>
           <button
@@ -66,27 +70,44 @@ export const MetabolicModal: React.FC<MetabolicModalProps> = ({
           </button>
         </div>
 
-        {/* 設定フォーム */}
+        {/* 設定フォーム（身体プロファイル順：体重 ➔ 代謝 ➔ 快眠基準 ➔ 飲用時間） */}
         <div className="p-4 sm:p-5 space-y-3.5 text-xs">
-          {/* 1. 快眠安全基準 */}
+          {/* 1. 体重 */}
           <div className="p-3 bg-stone-50/70 rounded-2xl border border-stone-200/80 space-y-1.5">
-            <div className="flex items-center space-x-1.5 font-black text-stone-800">
-              <Moon className="w-4 h-4 text-emerald-700" />
-              <span>快眠安全基準</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-1.5 font-black text-stone-800">
+                <Weight className="w-4 h-4 text-sky-700" />
+                <span>体重</span>
+              </div>
+              <span className="text-[10px] text-sky-800 font-mono font-bold bg-sky-100/70 px-2 py-0.5 rounded-full">
+                快眠上限 {effectiveSafe}mg / 集中 {effectiveFocus}mg
+              </span>
             </div>
-            <p className="text-[10px] text-stone-500">
-              就寝時に目指す体内残存カフェインの上限です。
+            <p className="text-[10px] text-stone-500 leading-normal">
+              体重に応じて血中濃度スケールと快眠・警戒・集中ラインが連動します。
             </p>
-            <select
-              value={safeSleepThresholdMg || 25}
-              onChange={(e) => onChangeSafeSleepThreshold(Number(e.target.value))}
-              className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-xs font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer"
-            >
-              <option value={15}>厳格 15mg以下</option>
-              <option value={25}>標準 25mg以下（推奨）</option>
-              <option value={35}>寛容 35mg以下</option>
-              <option value={50}>高耐性 50mg以下</option>
-            </select>
+            <div className="flex items-center space-x-2 pt-0.5">
+              <input
+                type="range"
+                min="35"
+                max="120"
+                step="1"
+                value={bodyWeightKg}
+                onChange={(e) => onChangeBodyWeight && onChangeBodyWeight(Number(e.target.value))}
+                className="flex-1 h-1.5 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-sky-700"
+              />
+              <div className="flex items-center space-x-1 bg-white border border-stone-200 rounded-xl px-2 py-1">
+                <input
+                  type="number"
+                  min="30"
+                  max="150"
+                  value={bodyWeightKg}
+                  onChange={(e) => onChangeBodyWeight && onChangeBodyWeight(Number(e.target.value))}
+                  className="w-10 text-xs font-mono font-bold text-center text-stone-900 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+                <span className="text-[11px] font-mono font-bold text-stone-500">kg</span>
+              </div>
+            </div>
           </div>
 
           {/* 2. 代謝体質 */}
@@ -134,37 +155,25 @@ export const MetabolicModal: React.FC<MetabolicModalProps> = ({
             )}
           </div>
 
-          {/* 3. 体重 */}
+          {/* 3. 快眠安全基準 */}
           <div className="p-3 bg-stone-50/70 rounded-2xl border border-stone-200/80 space-y-1.5">
             <div className="flex items-center space-x-1.5 font-black text-stone-800">
-              <Weight className="w-4 h-4 text-sky-700" />
-              <span>体重</span>
+              <Moon className="w-4 h-4 text-emerald-700" />
+              <span>快眠安全基準（基準体格60kg換算）</span>
             </div>
-            <p className="text-[10px] text-stone-500 leading-normal">
-              体重が軽い方ほど同じ摂取量で血中濃度が高くなります。
+            <p className="text-[10px] text-stone-500">
+              就寝時に目指す体内残存カフェインの上限です。
             </p>
-            <div className="flex items-center space-x-2 pt-0.5">
-              <input
-                type="range"
-                min="35"
-                max="120"
-                step="1"
-                value={bodyWeightKg}
-                onChange={(e) => onChangeBodyWeight && onChangeBodyWeight(Number(e.target.value))}
-                className="flex-1 h-1.5 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-sky-700"
-              />
-              <div className="flex items-center space-x-1 bg-white border border-stone-200 rounded-xl px-2 py-1">
-                <input
-                  type="number"
-                  min="30"
-                  max="150"
-                  value={bodyWeightKg}
-                  onChange={(e) => onChangeBodyWeight && onChangeBodyWeight(Number(e.target.value))}
-                  className="w-10 text-xs font-mono font-bold text-center text-stone-900 focus:outline-none"
-                />
-                <span className="text-[11px] font-mono font-bold text-stone-500">kg</span>
-              </div>
-            </div>
+            <select
+              value={safeSleepThresholdMg || 25}
+              onChange={(e) => onChangeSafeSleepThreshold(Number(e.target.value))}
+              className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-xs font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer"
+            >
+              <option value={15}>厳格 15mg以下（実効 {Number((15 * weightScale).toFixed(1))}mg）</option>
+              <option value={25}>標準 25mg以下・推奨（実効 {Number((25 * weightScale).toFixed(1))}mg）</option>
+              <option value={35}>寛容 35mg以下（実効 {Number((35 * weightScale).toFixed(1))}mg）</option>
+              <option value={50}>高耐性 50mg以下（実効 {Number((50 * weightScale).toFixed(1))}mg）</option>
+            </select>
           </div>
 
           {/* 4. 飲むのにかかる時間 */}

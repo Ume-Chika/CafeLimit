@@ -158,6 +158,12 @@ export default function App() {
     return presets.find((p) => p.id === settings.deadlinePresetId) || presets[0] || DEFAULT_NESCAFE_PRESETS[0];
   }, [presets, settings.deadlinePresetId]);
 
+  // 体重（kg）に基づく血中濃度・閾値スケーリング（EFSA/薬理動態基準体格 60kg をベースに連動）
+  const bodyWeight = settings.bodyWeightKg ?? 60;
+  const weightScale = bodyWeight / 60;
+  const effectiveSafeThresholdMg = Number(((settings.safeSleepThresholdMg || 25) * weightScale).toFixed(1));
+  const effectiveFocusThresholdMg = Number((75 * weightScale).toFixed(1));
+
   // シミュレーション計算（常に厳密な経口吸収・連続飲用時間積分モデルを適用）
   const simulationSummary = useMemo(() => {
     return runSimulation(
@@ -167,11 +173,11 @@ export default function App() {
       halfLifeHours,
       targetPreset ? targetPreset.caffeineMg : 80,
       targetPreset ? targetPreset.name : '標準2g',
-      settings.safeSleepThresholdMg || 25,
+      effectiveSafeThresholdMg,
       settings.drinkingDurationMinutes || 10,
       targetPreset?.drinkingDurationMinutes || settings.drinkingDurationMinutes || 10
     );
-  }, [events, currentTime, bedTimeDate, halfLifeHours, targetPreset, settings.safeSleepThresholdMg, settings.drinkingDurationMinutes]);
+  }, [events, currentTime, bedTimeDate, halfLifeHours, targetPreset, effectiveSafeThresholdMg, settings.drinkingDurationMinutes]);
 
   // 摂取イベント追加
   const handleAddIntakeEvent = (preset: BeveragePreset) => {
@@ -321,7 +327,8 @@ export default function App() {
             events={events}
             currentTime={currentTime}
             bedTime={bedTimeDate}
-            safeSleepThresholdMg={settings.safeSleepThresholdMg || 25}
+            safeSleepThresholdMg={effectiveSafeThresholdMg}
+            focusThresholdMg={effectiveFocusThresholdMg}
             showFocusZone={settings.showFocusZone}
             onSelectEventToEdit={(ev) => setEditingEvent(ev)}
             onSelectTimeToBrew={handleSelectTimeToBrew}
