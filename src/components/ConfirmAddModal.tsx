@@ -81,13 +81,20 @@ export const ConfirmAddModal: React.FC<ConfirmAddModalProps> = ({
             </div>
           </div>
 
-          {/* 摂取予定時刻バッジ */}
-          <div className="w-full bg-stone-50 border border-stone-200 rounded-2xl p-2.5 flex items-center justify-center space-x-2 text-xs">
-            <Clock className="w-3.5 h-3.5 text-stone-400" />
-            <span className="text-stone-500 font-bold">摂取時刻:</span>
-            <span className="font-mono font-black text-stone-900">
-              {getDateLabel()} {format(selectedTime, 'HH:mm')}
-            </span>
+          {/* 摂取予定時刻 & 飲用時間バッジ */}
+          <div className="w-full bg-stone-50 border border-stone-200 rounded-2xl p-2.5 space-y-1 text-xs">
+            <div className="flex items-center justify-center space-x-2">
+              <Clock className="w-3.5 h-3.5 text-stone-400" />
+              <span className="text-stone-500 font-bold">摂取開始:</span>
+              <span className="font-mono font-black text-stone-900">
+                {getDateLabel()} {format(selectedTime, 'HH:mm')}
+              </span>
+            </div>
+            {preset.drinkingDurationMinutes && preset.drinkingDurationMinutes > 10 && (
+              <div className="text-[11px] text-amber-800 font-bold bg-amber-100/60 rounded-lg py-0.5 px-2">
+                飲用時間: {preset.drinkingDurationMinutes < 60 ? `${preset.drinkingDurationMinutes}分` : `${Math.floor(preset.drinkingDurationMinutes / 60)}時間${preset.drinkingDurationMinutes % 60 ? (preset.drinkingDurationMinutes % 60) + '分' : ''}`} かけて飲む
+              </div>
+            )}
           </div>
         </div>
 

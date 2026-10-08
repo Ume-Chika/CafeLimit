@@ -140,7 +140,8 @@ export function calculateTotalCaffeineAt(
     const eventMs = new Date(event.timestamp).getTime();
     if (targetMs >= eventMs) {
       const elapsedHours = (targetMs - eventMs) / (1000 * 60 * 60);
-      total += calculateRemainingCaffeine(event.caffeineMg, elapsedHours, halfLifeHours, useOralAbsorption, drinkingDurationMinutes);
+      const eventDuration = event.drinkingDurationMinutes !== undefined ? event.drinkingDurationMinutes : drinkingDurationMinutes;
+      total += calculateRemainingCaffeine(event.caffeineMg, elapsedHours, halfLifeHours, useOralAbsorption, eventDuration);
     }
   }
 
@@ -306,7 +307,8 @@ export function runSimulation(
   targetName: string = '標準2g (80mg)',
   safeThresholdMg: number = 25,
   useOralAbsorption: boolean = false,
-  drinkingDurationMinutes: number = 10
+  drinkingDurationMinutes: number = 10,
+  targetDurationMinutes?: number
 ): SimulationSummary {
   // 就寝時残存量は就寝時点での計算（経口吸収ON時も就寝時点では同じ値）
   const bedCaffeineMg = calculateTotalCaffeineAt(events, bedTime, halfLifeHours, useOralAbsorption, drinkingDurationMinutes);
@@ -339,7 +341,8 @@ export function runSimulation(
   const hourlyPoints = generateSimulationPoints(events, graphStart, graphEnd, halfLifeHours, 15, useOralAbsorption, drinkingDurationMinutes);
   const maxSafePowderGrams = calculateMaxSafePowderGrams(events, currentTime, bedTime, halfLifeHours, safeThresholdMg, 40, useOralAbsorption, drinkingDurationMinutes);
   const maxSafeCaffeineMg = calculateMaxSafeCaffeineMg(events, currentTime, bedTime, halfLifeHours, safeThresholdMg, useOralAbsorption, drinkingDurationMinutes);
-  const deadlineForTarget = calculateDeadlineForDose(events, targetDoseMg, bedTime, halfLifeHours, safeThresholdMg, useOralAbsorption, drinkingDurationMinutes);
+  const effectiveTargetDuration = targetDurationMinutes !== undefined ? targetDurationMinutes : drinkingDurationMinutes;
+  const deadlineForTarget = calculateDeadlineForDose(events, targetDoseMg, bedTime, halfLifeHours, safeThresholdMg, useOralAbsorption, effectiveTargetDuration);
 
   return {
     bedTime,

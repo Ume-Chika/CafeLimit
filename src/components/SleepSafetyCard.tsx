@@ -96,16 +96,18 @@ export const SleepSafetyCard: React.FC<SleepSafetyCardProps> = ({
           />
         </label>
 
-        {/* 代謝体質（タップでわかりやすい解説付きモーダルが起動） */}
+        {/* シミュレーション・体質設定（快眠基準・代謝速度・体重・飲用時間） */}
         <button
           type="button"
           onClick={onOpenMetabolicModal}
-          className="flex items-center space-x-1.5 bg-stone-800/90 hover:bg-stone-700/90 active:scale-95 text-white px-3 py-1.5 rounded-xl border border-stone-700 text-xs font-bold transition-all cursor-pointer group"
-          title="タップして代謝体質・半減期を変更"
+          className="flex items-center space-x-1.5 bg-stone-800/90 hover:bg-stone-700/90 active:scale-95 text-white px-3 py-1.5 rounded-xl border border-stone-700 text-xs font-bold transition-all cursor-pointer group shadow-xs select-none"
+          title="タップしてシミュレーション・体質設定（快眠基準・代謝速度・体重・飲用時間）を変更"
         >
-          <Activity className="w-3.5 h-3.5 text-amber-400" />
-          <span className="text-stone-300 font-normal">代謝:</span>
+          <Activity className="w-3.5 h-3.5 text-amber-400 group-hover:rotate-12 transition-transform" />
+          <span className="text-stone-300 font-normal">体質・設定:</span>
           <span className="text-amber-200">{currentProfile.shortLabel}</span>
+          <span className="text-[10px] text-stone-500 font-normal">/</span>
+          <span className="text-emerald-300">{safeTh}mg</span>
           <ChevronRight className="w-3.5 h-3.5 text-stone-400 group-hover:translate-x-0.5 transition-transform" />
         </button>
       </div>
