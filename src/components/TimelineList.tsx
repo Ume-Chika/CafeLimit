@@ -41,6 +41,8 @@ export const TimelineList: React.FC<TimelineListProps> = ({
         return <Zap className="w-4 h-4 text-emerald-600" />;
       case 'tea':
         return <Droplets className="w-4 h-4 text-emerald-700" />;
+      case 'soda':
+        return <Sparkles className="w-4 h-4 text-red-600" />;
       default:
         return <Coffee className="w-4 h-4 text-amber-700" />;
     }
@@ -100,10 +102,15 @@ export const TimelineList: React.FC<TimelineListProps> = ({
                     <h4 className="text-xs font-bold text-stone-800 group-hover:text-amber-900 transition-colors">
                       {event.name}
                     </h4>
-                    {event.powderGrams !== undefined && (
-                      <span className="text-[10px] text-amber-800 font-semibold bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/60 flex items-center">
+                    {event.powderGrams !== undefined && event.category === 'nescafe' && (
+                      <span className="text-[10px] text-amber-800 font-semibold bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/60 flex items-center shrink-0 whitespace-nowrap">
                         <Sparkles className="w-2.5 h-2.5 mr-0.5" />
                         {event.powderGrams}g
+                      </span>
+                    )}
+                    {event.volumeMl !== undefined && (
+                      <span className="text-[10px] text-stone-600 font-semibold bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200/60 flex items-center shrink-0 whitespace-nowrap">
+                        {event.volumeMl}ml
                       </span>
                     )}
                   </div>

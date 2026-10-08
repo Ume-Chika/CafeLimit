@@ -217,10 +217,10 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
 
       const pointMs = targetPoint.time.getTime();
 
-      // 前後15分以内の既存摂取イベント（複数件対応）
+      // 前後8分以内（15分刻みグリッドの担当範囲）の既存摂取イベント（複数件対応）
       const matchedEvents = events.filter((e) => {
         const evMs = new Date(e.timestamp).getTime();
-        return Math.abs(evMs - pointMs) <= 15 * 60 * 1000;
+        return Math.abs(evMs - pointMs) < 8 * 60 * 1000;
       });
 
       const rawXPx = xAxis.getPixelForValue(targetIndex);
@@ -308,7 +308,7 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
         const pointMs = clickedP.time.getTime();
         const matchedEvents = events.filter((e) => {
           const evMs = new Date(e.timestamp).getTime();
-          return Math.abs(evMs - pointMs) <= 15 * 60 * 1000;
+          return Math.abs(evMs - pointMs) < 8 * 60 * 1000;
         });
 
         const rawXPx = chart.scales.x.getPixelForValue(idx);
@@ -361,10 +361,10 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
         pointRadius: (ctx: { dataIndex: number }) => {
           const pointTime = points[ctx.dataIndex]?.time?.getTime();
           if (!pointTime) return 0;
-          // 実際の摂取イベントがある点は常に大きくプロット
+          // 実際の摂取イベントがある点は常に大きくプロット（15分枠あたり1点）
           const hasEvent = events.some((e) => {
             const evTime = new Date(e.timestamp).getTime();
-            return Math.abs(evTime - pointTime) <= 15 * 60 * 1000;
+            return Math.abs(evTime - pointTime) < 8 * 60 * 1000;
           });
           if (hasEvent) return 6;
 
@@ -385,7 +385,7 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
           if (!pointTime) return 0;
           const hasEvent = events.some((e) => {
             const evTime = new Date(e.timestamp).getTime();
-            return Math.abs(evTime - pointTime) <= 15 * 60 * 1000;
+            return Math.abs(evTime - pointTime) < 8 * 60 * 1000;
           });
           return hasEvent ? 8 : 0;
         },
@@ -446,16 +446,6 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
 
   return (
     <div className="bg-white rounded-3xl p-4 sm:p-5 shadow-xs border border-stone-200/90 space-y-2 relative">
-      {/* 吹き出し表示時の画面外タップ検知バックドロップ */}
-      {selectedPointInfo && (
-        <div
-          className="fixed inset-0 z-20 pointer-events-auto bg-transparent"
-          onClick={(e) => {
-            e.stopPropagation();
-            setSelectedPointInfo(null);
-          }}
-        />
-      )}
 
       <div className="flex flex-wrap items-center justify-between gap-1.5 pb-0.5">
         <div className="flex items-center space-x-1.5">
@@ -609,7 +599,7 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
                       >
                         <div className="min-w-0 flex-1 pr-1.5">
                           <div className="font-bold truncate text-[11px]">
-                            {ev.category === 'energy' ? '⚡' : ev.category === 'tea' ? '🍵' : '☕'} {ev.name}
+                            {ev.category === 'energy' ? '⚡' : ev.category === 'tea' ? '🍵' : ev.category === 'soda' ? '🥤' : '☕'} {ev.name}
                           </div>
                           <div className="text-[10px] text-amber-400 font-mono font-semibold">
                             +{ev.caffeineMg}mg
