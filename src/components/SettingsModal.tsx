@@ -51,6 +51,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     });
   };
 
+  const handleDrinkingDurationChange = (durationMinutes: number) => {
+    onChangeSettings({
+      ...settings,
+      drinkingDurationMinutes: durationMinutes,
+    });
+  };
+
   const handleToggleFocusZone = () => {
     onChangeSettings({
       ...settings,
@@ -165,28 +172,62 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
 
           {/* 4. 日中の集中ゾーン表示（≥75mg / デフォルトOFF） */}
-          <div
-            onClick={handleToggleFocusZone}
-            className="p-3 bg-stone-50/70 rounded-2xl border border-stone-200/80 flex items-center justify-between cursor-pointer hover:bg-stone-100/80 transition-all select-none"
-          >
-            <div>
-              <div className="flex items-center space-x-1.5 font-bold text-stone-900 text-xs">
-                <Zap className="w-3.5 h-3.5 text-yellow-500 fill-yellow-400" />
-                <span>日中の集中ゾーン表示 (≥75mg)</span>
-              </div>
-              <span className="text-[10px] text-stone-500">EFSA基準の覚醒・集中ブースト域（経口吸収プロセス連動）をグラフに表示</span>
-            </div>
+          <div className="p-3 bg-stone-50/70 rounded-2xl border border-stone-200/80 space-y-2.5">
             <div
-              className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out ${
-                settings.showFocusZone ? 'bg-amber-800' : 'bg-stone-300'
-              }`}
+              onClick={handleToggleFocusZone}
+              className="flex items-center justify-between cursor-pointer select-none"
             >
+              <div className="flex-1 min-w-0 pr-2">
+                <div className="flex items-center space-x-1.5 font-bold text-stone-900 text-xs">
+                  <Zap className="w-3.5 h-3.5 text-yellow-500 fill-yellow-400 shrink-0" />
+                  <span>日中の集中ゾーン表示 (≥75mg)</span>
+                </div>
+                <span className="text-[10px] text-stone-500 leading-tight block">
+                  EFSA基準の覚醒・集中ブースト域（経口吸収プロセス連動）をグラフに表示
+                </span>
+              </div>
               <div
-                className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
-                  settings.showFocusZone ? 'translate-x-5' : 'translate-x-0'
+                className={`w-11 h-6 shrink-0 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out ${
+                  settings.showFocusZone ? 'bg-amber-800' : 'bg-stone-300'
                 }`}
-              />
+              >
+                <div
+                  className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
+                    settings.showFocusZone ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </div>
             </div>
+
+            {/* 集中ゾーンON時に出現する「飲み終わるまでにかかる時間」設定 */}
+            {settings.showFocusZone && (
+              <div className="pt-2 border-t border-stone-200/60 space-y-1.5 animate-fadeIn">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-1.5 font-bold text-stone-800 text-xs">
+                    <Clock className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                    <span>飲み終わるまでにかかる時間</span>
+                  </div>
+                  <span className="text-[11px] font-black text-amber-900 bg-amber-100/80 px-2 py-0.5 rounded-md">
+                    {settings.drinkingDurationMinutes || 10}分
+                  </span>
+                </div>
+                <p className="text-[10px] text-stone-500 leading-tight">
+                  時間をかけて飲むと、血中濃度の上昇がより緩やかになります。
+                </p>
+                <select
+                  value={settings.drinkingDurationMinutes || 10}
+                  onChange={(e) => handleDrinkingDurationChange(Number(e.target.value))}
+                  className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-xs font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20 cursor-pointer"
+                >
+                  <option value={10}>10分（標準・マグカップ1杯）</option>
+                  <option value={20}>20分（ゆっくり飲む）</option>
+                  <option value={30}>30分（30分かけて飲む）</option>
+                  <option value={40}>40分（40分かけて飲む）</option>
+                  <option value={50}>50分（50分かけて飲む）</option>
+                  <option value={60}>60分（1時間かけてゆっくり）</option>
+                </select>
+              </div>
+            )}
           </div>
 
           {/* 5. パネルタップ時の確認ダイアログ（スタイリッシュトグル） */}
@@ -194,12 +235,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             onClick={handleToggleConfirm}
             className="p-3 bg-stone-50/70 rounded-2xl border border-stone-200/80 flex items-center justify-between cursor-pointer hover:bg-stone-100/80 transition-all select-none"
           >
-            <div>
+            <div className="flex-1 min-w-0 pr-2">
               <span className="font-bold text-stone-900 block text-xs">パネルタップ時の確認ダイアログ</span>
-              <span className="text-[10px] text-stone-500">誤タップによる即時追加を防ぎます</span>
+              <span className="text-[10px] text-stone-500 leading-tight block">誤タップによる即時追加を防ぎます</span>
             </div>
             <div
-              className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out ${
+              className={`w-11 h-6 shrink-0 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out ${
                 settings.confirmBeforeAdd ? 'bg-amber-800' : 'bg-stone-300'
               }`}
             >

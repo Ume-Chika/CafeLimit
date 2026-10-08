@@ -29,6 +29,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   customHalfLifeHours: 4.0,
   safeSleepThresholdMg: 25,
   showFocusZone: false,
+  drinkingDurationMinutes: 10,
 };
 
 export default function App() {
@@ -166,9 +167,10 @@ export default function App() {
       targetPreset ? targetPreset.caffeineMg : 80,
       targetPreset ? targetPreset.name : '標準2g',
       settings.safeSleepThresholdMg || 25,
-      settings.showFocusZone || false
+      settings.showFocusZone || false,
+      settings.drinkingDurationMinutes || 10
     );
-  }, [events, currentTime, bedTimeDate, halfLifeHours, targetPreset, settings.safeSleepThresholdMg, settings.showFocusZone]);
+  }, [events, currentTime, bedTimeDate, halfLifeHours, targetPreset, settings.safeSleepThresholdMg, settings.showFocusZone, settings.drinkingDurationMinutes]);
 
   // 摂取イベント追加
   const handleAddIntakeEvent = (preset: BeveragePreset) => {
