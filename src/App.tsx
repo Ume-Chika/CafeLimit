@@ -158,7 +158,7 @@ export default function App() {
     return presets.find((p) => p.id === settings.deadlinePresetId) || presets[0] || DEFAULT_NESCAFE_PRESETS[0];
   }, [presets, settings.deadlinePresetId]);
 
-  // シミュレーション計算
+  // シミュレーション計算（常に厳密な経口吸収・連続飲用時間積分モデルを適用）
   const simulationSummary = useMemo(() => {
     return runSimulation(
       events,
@@ -168,11 +168,10 @@ export default function App() {
       targetPreset ? targetPreset.caffeineMg : 80,
       targetPreset ? targetPreset.name : '標準2g',
       settings.safeSleepThresholdMg || 25,
-      settings.showFocusZone || false,
       settings.drinkingDurationMinutes || 10,
       targetPreset?.drinkingDurationMinutes || settings.drinkingDurationMinutes || 10
     );
-  }, [events, currentTime, bedTimeDate, halfLifeHours, targetPreset, settings.safeSleepThresholdMg, settings.showFocusZone, settings.drinkingDurationMinutes]);
+  }, [events, currentTime, bedTimeDate, halfLifeHours, targetPreset, settings.safeSleepThresholdMg, settings.drinkingDurationMinutes]);
 
   // 摂取イベント追加
   const handleAddIntakeEvent = (preset: BeveragePreset) => {
@@ -496,7 +495,7 @@ export default function App() {
               <div className="space-y-1">
                 <h4 className="font-bold text-stone-900 text-sm">3. 経口吸収Batemanモデル & 高精度逆算</h4>
                 <p>
-                  日中の集中ゾーン表示ON時は、経口吸収速度定数 <em>k<sub>a</sub> = 4.5 h<sup>-1</sup></em>（吸収半減期 約9分、ピーク約30〜40分）および飲用時間積分を適用。就寝前最終時刻や今飲める最大量の逆算にも漸近補正係数 <em>α</em> を組み込み、順方向シミュレーションと逆算値が理論的に完全整合します。
+                  常に経口吸収速度定数 <em>k<sub>a</sub> = 4.5 h<sup>-1</sup></em>（吸収半減期 約9分、ピーク約30〜40分）および飲用時間積分を適用。就寝前最終時刻や今飲める最大量の逆算にも漸近補正係数 <em>α</em> を組み込み、順方向シミュレーションと逆算値が理論的に完全整合します。
                 </p>
               </div>
 
