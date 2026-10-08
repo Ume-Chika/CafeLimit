@@ -108,4 +108,5 @@ export interface AppSettings {
   customHalfLifeHours: number;
   safeSleepThresholdMg: number; // デフォルト 25mg
   showFocusZone?: boolean; // 日中の集中ゾーン表示（≥75mg、デフォルト false）
+  drinkingDurationMinutes?: number; // 飲み終わるまでにかかる時間（10〜60分、デフォルト10分）
 }

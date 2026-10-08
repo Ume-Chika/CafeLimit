@@ -78,13 +78,14 @@ export function evaluateSleepImpact(caffeineMg: number, safeThresholdMg: number 
 }
 
 /**
- * 指数関数的カフェイン減衰モデル & 1コンパートメント経口吸収モデル (Bateman関数)
+ * 指数関数的カフェイン減衰モデル & 1コンパートメント経口吸収モデル (Bateman関数 + 飲用時間連続入力)
  */
 export function calculateRemainingCaffeine(
   initialMg: number,
   elapsedHours: number,
   halfLifeHours: number,
-  useOralAbsorption: boolean = false
+  useOralAbsorption: boolean = false,
+  drinkingDurationMinutes: number = 10
 ): number {
   if (elapsedHours <= 0) return 0;
 
@@ -93,17 +94,29 @@ export function calculateRemainingCaffeine(
     return initialMg * Math.pow(0.5, elapsedHours / halfLifeHours);
   }
 
-  // 1コンパートメント経口投与モデル (Bateman関数)
-  // ka: 経口吸収速度定数 (約 4.5 /h => 吸収半減期 約9分, Tmax 約40分)
+  // 1コンパートメント経口投与モデル (Bateman関数 + 飲用時間連続積分)
+  // ka: 経口吸収速度定数 (約 4.5 /h => 吸収半減期 約9分)
   const ka = 4.5;
   const ke = Math.LN2 / halfLifeHours;
+  const Td = Math.max(0, (drinkingDurationMinutes || 10) / 60);
 
+  if (Td < 0.01) {
+    if (Math.abs(ka - ke) < 0.0001) {
+      return initialMg * ka * elapsedHours * Math.exp(-ke * elapsedHours);
+    }
+    const remaining = initialMg * (ka / (ka - ke)) * (Math.exp(-ke * elapsedHours) - Math.exp(-ka * elapsedHours));
+    return Math.max(0, remaining);
+  }
+
+  const tau1 = Math.min(elapsedHours, Td);
   if (Math.abs(ka - ke) < 0.0001) {
     return initialMg * ka * elapsedHours * Math.exp(-ke * elapsedHours);
   }
 
-  // C(t) = Dose * (ka / (ka - ke)) * (e^(-ke * t) - e^(-ka * t))
-  const remaining = initialMg * (ka / (ka - ke)) * (Math.exp(-ke * elapsedHours) - Math.exp(-ka * elapsedHours));
+  const termKe = (Math.exp(-ke * (elapsedHours - tau1)) - Math.exp(-ke * elapsedHours)) / ke;
+  const termKa = (Math.exp(-ka * (elapsedHours - tau1)) - Math.exp(-ka * elapsedHours)) / ka;
+  const remaining = (initialMg / Td) * (ka / (ka - ke)) * (termKe - termKa);
+
   return Math.max(0, remaining);
 }
 
@@ -114,7 +127,8 @@ export function calculateTotalCaffeineAt(
   events: IntakeEvent[],
   targetTime: Date,
   halfLifeHours: number,
-  useOralAbsorption: boolean = false
+  useOralAbsorption: boolean = false,
+  drinkingDurationMinutes: number = 10
 ): number {
   let total = 0;
   const targetMs = targetTime.getTime();
@@ -123,7 +137,7 @@ export function calculateTotalCaffeineAt(
     const eventMs = new Date(event.timestamp).getTime();
     if (targetMs >= eventMs) {
       const elapsedHours = (targetMs - eventMs) / (1000 * 60 * 60);
-      total += calculateRemainingCaffeine(event.caffeineMg, elapsedHours, halfLifeHours, useOralAbsorption);
+      total += calculateRemainingCaffeine(event.caffeineMg, elapsedHours, halfLifeHours, useOralAbsorption, drinkingDurationMinutes);
     }
   }
 
@@ -197,14 +211,15 @@ export function generateSimulationPoints(
   endTime: Date,
   halfLifeHours: number,
   intervalMinutes: number = 15,
-  useOralAbsorption: boolean = false
+  useOralAbsorption: boolean = false,
+  drinkingDurationMinutes: number = 10
 ): ChartDataPoint[] {
   const points: ChartDataPoint[] = [];
   const current = new Date(startTime.getTime());
   const endMs = endTime.getTime();
 
   while (current.getTime() <= endMs) {
-    const caffeineMg = calculateTotalCaffeineAt(events, current, halfLifeHours, useOralAbsorption);
+    const caffeineMg = calculateTotalCaffeineAt(events, current, halfLifeHours, useOralAbsorption, drinkingDurationMinutes);
     const timeLabel = format(current, 'HH:mm');
 
     points.push({
@@ -230,10 +245,11 @@ export function runSimulation(
   targetDoseMg: number = 80,
   targetName: string = '標準2g (80mg)',
   safeThresholdMg: number = 25,
-  useOralAbsorption: boolean = false
+  useOralAbsorption: boolean = false,
+  drinkingDurationMinutes: number = 10
 ): SimulationSummary {
   // 就寝時残存量は就寝時点での計算（経口吸収ON時も就寝時点では同じ値）
-  const bedCaffeineMg = calculateTotalCaffeineAt(events, bedTime, halfLifeHours, useOralAbsorption);
+  const bedCaffeineMg = calculateTotalCaffeineAt(events, bedTime, halfLifeHours, useOralAbsorption, drinkingDurationMinutes);
   const roundedBedMg = Math.round(bedCaffeineMg * 10) / 10;
   const evaluation = evaluateSleepImpact(roundedBedMg, safeThresholdMg);
   const totalDailyCaffeineMg = events.reduce((sum, e) => sum + e.caffeineMg, 0);
@@ -260,7 +276,7 @@ export function runSimulation(
   const graphStart = new Date(startMs);
   const graphEnd = new Date(endMs);
 
-  const hourlyPoints = generateSimulationPoints(events, graphStart, graphEnd, halfLifeHours, 15, useOralAbsorption);
+  const hourlyPoints = generateSimulationPoints(events, graphStart, graphEnd, halfLifeHours, 15, useOralAbsorption, drinkingDurationMinutes);
   const maxSafePowderGrams = calculateMaxSafePowderGrams(events, currentTime, bedTime, halfLifeHours, safeThresholdMg);
   const maxSafeCaffeineMg = calculateMaxSafeCaffeineMg(events, currentTime, bedTime, halfLifeHours, safeThresholdMg);
   const deadlineForTarget = calculateDeadlineForDose(events, targetDoseMg, bedTime, halfLifeHours, safeThresholdMg);
