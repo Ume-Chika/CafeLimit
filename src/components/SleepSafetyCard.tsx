@@ -163,7 +163,7 @@ export const SleepSafetyCard: React.FC<SleepSafetyCardProps> = ({
           <div className="flex justify-between text-[10px] font-bold text-stone-600 px-0.5">
             <span className="text-emerald-700">0mg (快眠)</span>
             <span className="text-emerald-700">{safeTh}mg (安全上限)</span>
-            <span className="text-amber-700">{safeTh * 2}mg (警告境界)</span>
+            <span className="text-amber-700">{safeTh * 2}mg (警戒ライン)</span>
             <span className="text-red-700">{safeTh * 3}mg+</span>
           </div>
         </div>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Settings, Coffee, Clock, ShieldCheck, Moon, RefreshCw, Trash2 } from 'lucide-react';
+import { X, Settings, Coffee, Clock, ShieldCheck, Moon, RefreshCw, Trash2, Zap } from 'lucide-react';
 import type { AppSettings, BeveragePreset } from '../types/caffeine';
 
 interface SettingsModalProps {
@@ -48,6 +48,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     onChangeSettings({
       ...settings,
       confirmBeforeAdd: !settings.confirmBeforeAdd,
+    });
+  };
+
+  const handleToggleFocusZone = () => {
+    onChangeSettings({
+      ...settings,
+      showFocusZone: !settings.showFocusZone,
     });
   };
 
@@ -157,7 +164,32 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </select>
           </div>
 
-          {/* 4. パネルタップ時の確認ダイアログ（スタイリッシュトグル） */}
+          {/* 4. 日中の集中ゾーン表示（≥75mg / デフォルトOFF） */}
+          <div
+            onClick={handleToggleFocusZone}
+            className="p-3 bg-stone-50/70 rounded-2xl border border-stone-200/80 flex items-center justify-between cursor-pointer hover:bg-stone-100/80 transition-all select-none"
+          >
+            <div>
+              <div className="flex items-center space-x-1.5 font-bold text-stone-900 text-xs">
+                <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                <span>日中の集中ゾーン表示 (≥75mg)</span>
+              </div>
+              <span className="text-[10px] text-stone-500">EFSA基準の覚醒・集中ブースト域をグラフに表示</span>
+            </div>
+            <div
+              className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out ${
+                settings.showFocusZone ? 'bg-amber-500' : 'bg-stone-300'
+              }`}
+            >
+              <div
+                className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
+                  settings.showFocusZone ? 'translate-x-5' : 'translate-x-0'
+                }`}
+              />
+            </div>
+          </div>
+
+          {/* 5. パネルタップ時の確認ダイアログ（スタイリッシュトグル） */}
           <div
             onClick={handleToggleConfirm}
             className="p-3 bg-stone-50/70 rounded-2xl border border-stone-200/80 flex items-center justify-between cursor-pointer hover:bg-stone-100/80 transition-all select-none"

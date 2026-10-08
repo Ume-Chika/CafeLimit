@@ -69,7 +69,7 @@ export function evaluateSleepImpact(caffeineMg: number, safeThresholdMg: number 
   }
   return {
     status: 'WARNING',
-    label: '覚醒警戒ゾーン（睡眠阻害）',
+    label: '警戒ゾーン（睡眠阻害）',
     color: '#EF4444', // red-500
     bgColor: '#FEF2F2', // red-50
     borderColor: '#FECACA', // red-200

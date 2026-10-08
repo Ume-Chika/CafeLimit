@@ -28,6 +28,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   confirmBeforeAdd: true,
   customHalfLifeHours: 4.0,
   safeSleepThresholdMg: 25,
+  showFocusZone: false,
 };
 
 export default function App() {
@@ -316,6 +317,7 @@ export default function App() {
             currentTime={currentTime}
             bedTime={bedTimeDate}
             safeSleepThresholdMg={settings.safeSleepThresholdMg || 25}
+            showFocusZone={settings.showFocusZone}
             onSelectEventToEdit={(ev) => setEditingEvent(ev)}
             onSelectTimeToBrew={handleSelectTimeToBrew}
           />
