@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Settings, Coffee, Clock, ShieldCheck, Moon, RefreshCw, Trash2, Zap } from 'lucide-react';
+import { X, Settings, Coffee, Clock, ShieldCheck, RefreshCw, Trash2, Zap } from 'lucide-react';
 import type { AppSettings, BeveragePreset } from '../types/caffeine';
 
 interface SettingsModalProps {
@@ -37,24 +37,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     });
   };
 
-  const handleThresholdChange = (threshold: number) => {
-    onChangeSettings({
-      ...settings,
-      safeSleepThresholdMg: threshold,
-    });
-  };
-
   const handleToggleConfirm = () => {
     onChangeSettings({
       ...settings,
       confirmBeforeAdd: !settings.confirmBeforeAdd,
-    });
-  };
-
-  const handleDrinkingDurationChange = (durationMinutes: number) => {
-    onChangeSettings({
-      ...settings,
-      drinkingDurationMinutes: durationMinutes,
     });
   };
 
@@ -92,7 +78,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
             <div>
               <h3 className="text-sm font-black text-stone-900">アプリ表示設定</h3>
-              <p className="text-[11px] text-stone-500">逆算インサイト・睡眠基準・データ管理</p>
+              <p className="text-[11px] text-stone-500">逆算インサイト・グラフ表示・データ管理</p>
             </div>
           </div>
           <button
@@ -150,29 +136,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </select>
           </div>
 
-          {/* 3. 快眠目標閾値（安全上限）の選択（プルダウン） */}
-          <div className="p-3 bg-stone-50/70 rounded-2xl border border-stone-200/80 space-y-1.5">
-            <div className="flex items-center space-x-1.5 font-black text-stone-800">
-              <Moon className="w-4 h-4 text-emerald-700" />
-              <span>快眠安全基準（就寝時残存上限）</span>
-            </div>
-            <p className="text-[10px] text-stone-500">
-              就寝時に目指すカフェイン残存量の上限を指定します。
-            </p>
-            <select
-              value={settings.safeSleepThresholdMg || 25}
-              onChange={(e) => handleThresholdChange(Number(e.target.value))}
-              className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-xs font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-            >
-              <option value={15}>敏感・厳格 (就寝時 15mg以下)</option>
-              <option value={25}>標準バランス (就寝時 25mg以下 / 推奨)</option>
-              <option value={35}>寛容・耐性あり (就寝時 35mg以下)</option>
-              <option value={50}>高耐性 (就寝時 50mg以下)</option>
-            </select>
-          </div>
-
-          {/* 4. 日中の集中ゾーン表示（≥75mg / デフォルトOFF） */}
-          <div className="p-3 bg-stone-50/70 rounded-2xl border border-stone-200/80 space-y-2.5">
+          {/* 3. 日中の集中ゾーン表示（≥75mg / デフォルトOFF） */}
+          <div className="p-3 bg-stone-50/70 rounded-2xl border border-stone-200/80 space-y-1">
             <div
               onClick={handleToggleFocusZone}
               className="flex items-center justify-between cursor-pointer select-none"
@@ -183,7 +148,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   <span>日中の集中ゾーン表示 (≥75mg)</span>
                 </div>
                 <p className="text-[10px] text-stone-500 leading-normal">
-                  集中ゾーンをグラフに表示し、カフェイン計算をより厳密に行います（経口吸収プロセス連動）。
+                  グラフ上に集中・覚醒ゾーン（75mg以上）のハイライト帯を表示します。
                 </p>
               </div>
               <div
@@ -198,31 +163,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 />
               </div>
             </div>
-
-            {/* 集中ゾーンON時に出現する「飲み終わるまでにかかる時間」設定 */}
-            {settings.showFocusZone && (
-              <div className="pt-2 border-t border-stone-200/60 space-y-1.5 animate-fadeIn">
-                <div className="flex items-center space-x-1.5 font-bold text-stone-800 text-xs">
-                  <Clock className="w-4 h-4 text-amber-700 shrink-0" />
-                  <span>飲み終わるまでにかかる時間</span>
-                </div>
-                <p className="text-[10px] text-stone-500 leading-normal">
-                  時間をかけて飲むと、血中濃度の上昇がより緩やかになります。
-                </p>
-                <select
-                  value={settings.drinkingDurationMinutes || 10}
-                  onChange={(e) => handleDrinkingDurationChange(Number(e.target.value))}
-                  className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-xs font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20 cursor-pointer"
-                >
-                  <option value={10}>10分</option>
-                  <option value={20}>20分</option>
-                  <option value={30}>30分</option>
-                  <option value={40}>40分</option>
-                  <option value={50}>50分</option>
-                  <option value={60}>60分</option>
-                </select>
-              </div>
-            )}
           </div>
 
           {/* 5. パネルタップ時の確認ダイアログ（スタイリッシュトグル） */}
