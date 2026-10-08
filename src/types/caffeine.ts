@@ -107,4 +107,5 @@ export interface AppSettings {
   confirmBeforeAdd: boolean;
   customHalfLifeHours: number;
   safeSleepThresholdMg: number; // デフォルト 25mg
+  showFocusZone?: boolean; // 日中の集中ゾーン表示（≥75mg、デフォルト false）
 }

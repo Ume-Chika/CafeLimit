@@ -14,7 +14,7 @@ import type { ChartOptions } from 'chart.js';
 import annotationPlugin from 'chartjs-plugin-annotation';
 import { Line, getElementAtEvent } from 'react-chartjs-2';
 import type { ChartDataPoint, IntakeEvent } from '../types/caffeine';
-import { Activity, Plus, X } from 'lucide-react';
+import { Activity, Plus, X, Zap } from 'lucide-react';
 import { format } from 'date-fns';
 
 ChartJS.register(
@@ -35,6 +35,7 @@ interface CaffeineChartProps {
   currentTime: Date;
   bedTime: Date;
   safeSleepThresholdMg?: number;
+  showFocusZone?: boolean;
   onSelectEventToEdit: (event: IntakeEvent) => void;
   onSelectTimeToBrew: (time: Date) => void;
 }
@@ -55,6 +56,7 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
   currentTime,
   bedTime,
   safeSleepThresholdMg = 25,
+  showFocusZone = false,
   onSelectEventToEdit,
   onSelectTimeToBrew,
 }) => {
@@ -112,6 +114,18 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
       borderWidth: 1.5,
       borderDash: [4, 4],
     };
+
+    // 日中の集中ゾーンライン（設定ON時・黄色/アンバー 75mg）
+    if (showFocusZone) {
+      annotations['focusLine'] = {
+        type: 'line',
+        yMin: 75,
+        yMax: 75,
+        borderColor: 'rgba(245, 158, 11, 0.9)', // amber-500
+        borderWidth: 1.5,
+        borderDash: [5, 5],
+      };
+    }
 
     // 現在時刻マーカー
     const curMs = currentTime.getTime();
@@ -178,7 +192,7 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
     }
 
     return { labels: lbls, dataValues: vals, eventAnnotations: annotations };
-  }, [points, currentTime, bedTime, safeSleepThresholdMg]);
+  }, [points, currentTime, bedTime, safeSleepThresholdMg, showFocusZone]);
 
   const maxVal = Math.max(...dataValues, 60);
 
@@ -448,7 +462,13 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
           <Activity className="w-4 h-4 text-amber-800" />
           <h3 className="text-xs font-black text-stone-900">体内カフェイン推移</h3>
         </div>
-        <div className="flex items-center space-x-2 sm:space-x-3 text-[10px] font-bold">
+        <div className="flex items-center space-x-2 sm:space-x-2.5 text-[10px] font-bold">
+          {showFocusZone && (
+            <span className="flex items-center space-x-1 text-amber-600">
+              <span className="inline-block w-2.5 border-b-2 border-dashed border-amber-500"></span>
+              <span>集中 (&ge;75mg)</span>
+            </span>
+          )}
           <span className="flex items-center space-x-1 text-emerald-700">
             <span className="inline-block w-2.5 border-b-2 border-dashed border-emerald-500"></span>
             <span>快眠 (&le;{safeSleepThresholdMg}mg)</span>
@@ -561,6 +581,14 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
                   {selectedPointInfo.caffeineMg} <span className="text-[10px] font-normal text-stone-400">mg</span>
                 </span>
               </div>
+
+              {/* 集中ゾーン（設定ON時かつ75mg以上） */}
+              {showFocusZone && selectedPointInfo.caffeineMg >= 75 && (
+                <div className="bg-amber-500/20 border border-amber-500/40 rounded-lg px-2 py-0.5 text-[10px] text-amber-300 font-bold flex items-center space-x-1">
+                  <Zap className="w-3 h-3 text-amber-400 fill-amber-400" />
+                  <span>⚡ 集中ブースト中 (&ge;75mg)</span>
+                </div>
+              )}
 
               {/* イベント情報がある場合 */}
               {selectedPointInfo.event && (
