@@ -194,7 +194,7 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
     }
 
     return { labels: lbls, dataValues: vals, eventAnnotations: annotations };
-  }, [points, currentTime, bedTime, safeSleepThresholdMg, showFocusZone]);
+  }, [points, currentTime, bedTime, safeSleepThresholdMg, focusThresholdMg, showFocusZone]);
 
   const maxVal = Math.max(...dataValues, 60);
 

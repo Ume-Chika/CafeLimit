@@ -12,6 +12,11 @@ interface AddPresetModalProps {
   existingPresetIds: string[];
 }
 
+const createPresetInstanceId = (baseId: string): string =>
+  `${baseId}-${Date.now().toString().slice(-4)}`;
+
+const createCustomPresetId = (): string => `custom-${Date.now()}`;
+
 export const AddPresetModal: React.FC<AddPresetModalProps> = ({
   isOpen,
   onClose,
@@ -32,7 +37,7 @@ export const AddPresetModal: React.FC<AddPresetModalProps> = ({
   const handleSelectOption = (opt: PresetOptionItem) => {
     // ユーザーに名前の入力を求めず、即座に追加してモーダルを閉じる
     const newPreset: BeveragePreset = {
-      id: `${opt.id}-${Date.now().toString().slice(-4)}`,
+      id: createPresetInstanceId(opt.id),
       name: opt.name,
       category: opt.category,
       caffeineMg: opt.caffeineMg,
@@ -55,7 +60,7 @@ export const AddPresetModal: React.FC<AddPresetModalProps> = ({
     if (!customName.trim() || customCaffeineMg <= 0) return;
 
     const newPreset: BeveragePreset = {
-      id: `custom-${Date.now()}`,
+      id: createCustomPresetId(),
       name: customName.trim(),
       category: customCategory,
       caffeineMg: Number(customCaffeineMg),

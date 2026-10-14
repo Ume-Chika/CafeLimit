@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Clock, RotateCcw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format, addMinutes, isToday, isTomorrow, isYesterday } from 'date-fns';
 
@@ -23,16 +23,14 @@ export const TimeSliderPicker: React.FC<TimeSliderPickerProps> = ({
 
   const [isDirectTimeInput, setIsDirectTimeInput] = useState<boolean>(false);
 
-  // 外部からの selectedTime 変更時に、referenceTime が大きく離れていたら追従
-  useEffect(() => {
-    const diff = (selectedTime.getTime() - referenceTime.getTime()) / (1000 * 60);
-    if (diff < -60 || diff > 60) {
-      const newRef = new Date(selectedTime);
-      const mins = newRef.getMinutes();
-      newRef.setMinutes(Math.round(mins / 15) * 15, 0, 0);
-      setReferenceTime(newRef);
-    }
-  }, [selectedTime, referenceTime]);
+  // 外部（グラフタップ等）から selectedTime が大きく変更された場合、レンダリング時に基準時刻を追従させる
+  const diffFromRefMinutes = (selectedTime.getTime() - referenceTime.getTime()) / (1000 * 60);
+  if (diffFromRefMinutes < -60 || diffFromRefMinutes > 60) {
+    const newRef = new Date(selectedTime);
+    const mins = newRef.getMinutes();
+    newRef.setMinutes(Math.round(mins / 15) * 15, 0, 0);
+    setReferenceTime(newRef);
+  }
 
   // 選択時刻と基準時刻の差分分数（-60〜+60分）
   const diffMinutes = Math.round((selectedTime.getTime() - referenceTime.getTime()) / (1000 * 60));

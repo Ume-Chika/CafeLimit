@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, Check, MoreVertical } from 'lucide-react';
 import type { BeveragePreset } from '../types/caffeine';
+import { formatDurationShort } from '../utils/caffeineEngine';
 import { NescafeCoffeeCup } from './NescafeCoffeeCup';
 
 interface CoffeePanelListProps {
@@ -23,14 +24,6 @@ export const CoffeePanelList: React.FC<CoffeePanelListProps> = ({
   defaultDrinkingDuration = 10,
 }) => {
   const [justAddedId, setJustAddedId] = useState<string | null>(null);
-
-  const formatDurationShort = (minutes: number = 10): string => {
-    if (minutes < 60) return `${minutes}分`;
-    const hours = Math.floor(minutes / 60);
-    const rem = minutes % 60;
-    if (rem === 0) return `${hours}時間`;
-    return `${hours}.${Math.round((rem / 60) * 10)}時間`;
-  };
 
   const handleCardClick = (preset: BeveragePreset) => {
     if (confirmBeforeAdd && onSelectPresetToConfirm) {
