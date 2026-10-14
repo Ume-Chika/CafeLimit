@@ -103,7 +103,7 @@ export const AddPresetModal: React.FC<AddPresetModalProps> = ({
         {hasSubGroups ? (
           Object.entries(subGroups).map(([subTitle, items]) => (
             <div key={subTitle} className="space-y-2">
-              <div className="text-[11px] font-black text-stone-500 uppercase tracking-wider px-1">
+              <div className="text-[11px] font-black text-stone-500 tracking-wider px-1">
                 {subTitle}
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -281,15 +281,15 @@ export const AddPresetModal: React.FC<AddPresetModalProps> = ({
           {/* Step 2: 量（サイズ）選択 */}
           {selectedGroup && !isCustomMode && (
             <div className="space-y-4">
-              <div className="p-3 bg-amber-50/50 rounded-2xl border border-amber-200/60 flex items-center justify-between">
-                <div className="flex items-center space-x-2.5">
+              <div className="p-3 bg-amber-50/50 rounded-2xl border border-amber-200/60 flex items-center justify-between gap-2">
+                <div className="flex items-center space-x-2.5 min-w-0">
                   <NescafeCoffeeCup
                     color={selectedGroup.color}
                     category={selectedGroup.category}
                     size="sm"
                   />
-                  <div>
-                    <span className="text-xs font-black text-amber-950">
+                  <div className="min-w-0">
+                    <span className="text-xs font-black text-amber-950 block truncate">
                       {selectedGroup.name}
                     </span>
                     <p className="text-[10px] text-amber-900/80">
@@ -297,7 +297,7 @@ export const AddPresetModal: React.FC<AddPresetModalProps> = ({
                     </p>
                   </div>
                 </div>
-                <span className="text-[11px] font-mono font-bold text-amber-900 bg-white/80 px-2 py-0.5 rounded-lg border border-amber-200">
+                <span className="text-[11px] font-mono font-bold text-amber-900 bg-white/80 px-2.5 py-0.5 rounded-lg border border-amber-200 whitespace-nowrap shrink-0">
                   {selectedGroup.options.length} 種類
                 </span>
               </div>
