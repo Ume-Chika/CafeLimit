@@ -179,10 +179,13 @@ export function calculateMaxSafeCaffeineMg(
   const remainingAllowanceAtBed = Math.max(0, safeThresholdMg - existingAtBed);
 
   const hoursToBed = Math.max(0, (bedTime.getTime() - currentTime.getTime()) / (1000 * 60 * 60));
-  if (hoursToBed <= 0) return 0;
+  if (hoursToBed <= 0 || remainingAllowanceAtBed <= 0) return 0;
 
-  const alpha = getOralAbsorptionAlpha(halfLifeHours, drinkingDurationMinutes);
-  const maxInitialMg = (remainingAllowanceAtBed / alpha) * Math.pow(2, hoursToBed / halfLifeHours);
+  // 線形性 C(t) = D * C_1(t) に基づき、1mg摂取時の就寝時残存率で厳密に逆算（12時間飲用や就寝直前でも誤差ゼロ）
+  const unitRemainingAtBed = calculateRemainingCaffeine(1, hoursToBed, halfLifeHours, drinkingDurationMinutes);
+  if (unitRemainingAtBed <= 0) return 0;
+
+  const maxInitialMg = remainingAllowanceAtBed / unitRemainingAtBed;
   return Math.max(0, Math.round(maxInitialMg * 10) / 10);
 }
 
