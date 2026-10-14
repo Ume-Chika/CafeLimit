@@ -57,9 +57,9 @@ describe('caffeineEngine — 数理モデル・往復整合性テスト', () => 
             };
             const remainingAtBed = calculateTotalCaffeineAt([testEvent], bedTime, hl, dur);
 
-            // 飲み終わり時点 (elapsed >= dur/60) に就寝を迎えるケースでは漸近逆算値と厳密一致、
-            // 12時間かけて少量(80mg)を飲み代謝が速い(2.5h)等で最高到達濃度自体が閾値未満のケースでは安全側(<= th)に収まること
-            if (elapsedAtBedHours >= dur / 60) {
+            // 飲み終わり＋吸収完了後 (elapsed >= dur/60 + 1.5h) に就寝を迎えるケースでは漸近逆算値と厳密一致、
+            // 12時間かけて少量(80mg)を飲む等で飲み終わり直後または最高到達濃度自体が閾値未満のケースでは安全側(<= th)に収まること
+            if (elapsedAtBedHours >= dur / 60 + 1.5) {
               assert.ok(
                 Math.abs(remainingAtBed - th) < 0.05,
                 `不一致: hl=${hl}, dur=${dur}, dose=${dose}, th=${th} => remaining=${remainingAtBed}`
