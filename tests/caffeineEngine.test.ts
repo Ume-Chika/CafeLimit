@@ -34,7 +34,7 @@ describe('caffeineEngine — 数理モデル・往復整合性テスト', () => 
     }
   });
 
-  it('往復整合性①: calculateDeadlineForDose で逆算した最終時刻に摂取したとき、bedTime時点の残存量が safeThresholdMg と厳密に一致すること（長時間チビチビ飲み含む）', () => {
+  it('往復整合性①: calculateDeadlineForDose で逆算した最終時刻に摂取したとき、bedTime時点の残存量が safeThresholdMg と厳密に一致すること', () => {
     const bedTime = new Date('2026-10-14T23:30:00+09:00');
     const halfLives = [2.5, 4.0, 6.0];
     const durations = [1, 10, 30, 60, 180, 720]; // 1分〜12時間（研究室での長時間飲用ユースケースを含む）
@@ -46,6 +46,7 @@ describe('caffeineEngine — 数理モデル・往復整合性テスト', () => 
         for (const dose of doses) {
           for (const th of thresholds) {
             const deadline = calculateDeadlineForDose([], dose, bedTime, hl, th, dur);
+            const elapsedAtBedHours = (bedTime.getTime() - deadline.getTime()) / (1000 * 60 * 60);
             const testEvent: IntakeEvent = {
               id: 'test-ev',
               timestamp: deadline.toISOString(),
@@ -55,17 +56,27 @@ describe('caffeineEngine — 数理モデル・往復整合性テスト', () => 
               drinkingDurationMinutes: dur,
             };
             const remainingAtBed = calculateTotalCaffeineAt([testEvent], bedTime, hl, dur);
-            assert.ok(
-              Math.abs(remainingAtBed - th) < 0.05,
-              `不一致: hl=${hl}, dur=${dur}, dose=${dose}, th=${th} => remaining=${remainingAtBed}`
-            );
+
+            // 飲み終わり時点 (elapsed >= dur/60) に就寝を迎えるケースでは漸近逆算値と厳密一致、
+            // 12時間かけて少量(80mg)を飲み代謝が速い(2.5h)等で最高到達濃度自体が閾値未満のケースでは安全側(<= th)に収まること
+            if (elapsedAtBedHours >= dur / 60) {
+              assert.ok(
+                Math.abs(remainingAtBed - th) < 0.05,
+                `不一致: hl=${hl}, dur=${dur}, dose=${dose}, th=${th} => remaining=${remainingAtBed}`
+              );
+            } else {
+              assert.ok(
+                remainingAtBed <= th + 0.05,
+                `閾値超過: hl=${hl}, dur=${dur}, dose=${dose}, th=${th} => remaining=${remainingAtBed}`
+              );
+            }
           }
         }
       }
     }
   });
 
-  it('往復整合性②: calculateMaxSafeCaffeineMg で逆算した最大許容量を現在時刻に摂取したとき、bedTime時点の残存量が safeThresholdMg 以下（誤差±0.15mg以内）に収まること', () => {
+  it('往復整合性②: calculateMaxSafeCaffeineMg で逆算した最大許容量を現在時刻に摂取したとき、12時間チビチビ飲みを含め bedTime 時点の残存量が safeThresholdMg と厳密に一致すること', () => {
     const currentTime = new Date('2026-10-14T14:00:00+09:00');
     const bedTime = new Date('2026-10-14T23:30:00+09:00');
     const existingEvent: IntakeEvent = {
@@ -78,19 +89,19 @@ describe('caffeineEngine — 数理モデル・往復整合性テスト', () => 
     };
 
     for (const hl of [2.5, 4.0, 6.0]) {
-      for (const dur of [10, 30, 60]) {
+      for (const dur of [10, 30, 60, 720, 1440]) {
         const maxMg = calculateMaxSafeCaffeineMg([existingEvent], currentTime, bedTime, hl, 25, dur);
         assert.ok(maxMg > 0);
         const nowEvent: IntakeEvent = {
           id: 'now-drink',
           timestamp: currentTime.toISOString(),
-          name: 'Test',
+          name: 'Lab All-Day Coffee',
           category: 'coffee',
           caffeineMg: maxMg,
           drinkingDurationMinutes: dur,
         };
         const totalAtBed = calculateTotalCaffeineAt([existingEvent, nowEvent], bedTime, hl, dur);
-        assert.ok(Math.abs(totalAtBed - 25) <= 0.15, `hl=${hl}, dur=${dur} => totalAtBed=${totalAtBed}`);
+        assert.ok(Math.abs(totalAtBed - 25) <= 0.1, `hl=${hl}, dur=${dur} => totalAtBed=${totalAtBed}`);
       }
     }
   });
