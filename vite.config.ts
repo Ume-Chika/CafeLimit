@@ -9,4 +9,21 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  build: {
+    rolldownOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('chart.js') || id.includes('react-chartjs-2')) {
+              return 'chart-vendor';
+            }
+            if (id.includes('react') || id.includes('date-fns') || id.includes('lucide-react')) {
+              return 'ui-vendor';
+            }
+          }
+          return undefined;
+        },
+      },
+    },
+  },
 })

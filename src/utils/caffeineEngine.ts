@@ -150,12 +150,8 @@ export function getOralAbsorptionAlpha(halfLifeHours: number, drinkingDurationMi
   const duration = drinkingDurationMinutes ?? 10;
   const Td = Math.max(0, duration / 60);
 
-  if (Math.abs(ka - ke) < 0.0001) {
-    return 1;
-  }
-
-  const alphaKa = ka / (ka - ke);
-  if (Td < 0.01) {
+  const alphaKa = Math.abs(ka - ke) < 0.0001 ? 1 : ka / (ka - ke);
+  if (Td < 0.01 || ke * Td < 0.0001) {
     return alphaKa;
   }
 
@@ -230,16 +226,19 @@ export function calculateDeadlineForDose(
     halfLifeHours,
     drinkingDurationMinutes
   );
-  const allowedFromThisDose = Math.max(0.1, safeThresholdMg - existingAtBed);
+  const remainingMargin = safeThresholdMg - existingAtBed;
+  if (remainingMargin <= 0) {
+    return new Date(0);
+  }
 
   const alpha = getOralAbsorptionAlpha(halfLifeHours, drinkingDurationMinutes);
   const effectiveDose = alpha * doseMg;
 
-  if (effectiveDose <= allowedFromThisDose) {
+  if (effectiveDose <= remainingMargin) {
     return bedTime;
   }
 
-  const requiredHours = halfLifeHours * (Math.log(effectiveDose / allowedFromThisDose) / Math.LN2);
+  const requiredHours = halfLifeHours * (Math.log(effectiveDose / remainingMargin) / Math.LN2);
   const deadlineMs = bedTime.getTime() - requiredHours * 60 * 60 * 1000;
 
   return new Date(deadlineMs);

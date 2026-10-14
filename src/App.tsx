@@ -16,29 +16,23 @@ import { SettingsModal } from './components/SettingsModal';
 import { ConfirmAddModal } from './components/ConfirmAddModal';
 import { EditPresetModal } from './components/EditPresetModal';
 import { ScientificModal } from './components/ScientificModal';
-
-const STORAGE_KEY_EVENTS = 'cafelimit_events_v4';
-const STORAGE_KEY_PRESETS = 'cafelimit_presets_v4';
-const STORAGE_KEY_BEDTIME = 'cafelimit_bedtime_v4';
-const STORAGE_KEY_SPEED = 'cafelimit_speed_v4';
-const STORAGE_KEY_SETTINGS = 'cafelimit_settings_v4';
-
-const DEFAULT_SETTINGS: AppSettings = {
-  maxIntakeUnit: 'powder',
-  deadlinePresetId: 'nescafe-standard-2g',
-  confirmBeforeAdd: true,
-  customHalfLifeHours: 4.0,
-  safeSleepThresholdMg: 25,
-  showFocusZone: false,
-  drinkingDurationMinutes: 10,
-  bodyWeightKg: 60,
-};
+import {
+  STORAGE_KEYS,
+  DEFAULT_SETTINGS,
+  loadSettingsFromStorage,
+  loadPresetsFromStorage,
+  loadEventsFromStorage,
+  loadBedTimeFromStorage,
+  loadMetabolicSpeedFromStorage,
+  clearAllCafeLimitStorage,
+  createDefaultSampleEvents,
+} from './utils/storage';
 
 export default function App() {
   const panelSectionRef = useRef<HTMLDivElement>(null);
   const sleepSectionRef = useRef<HTMLDivElement>(null);
 
-  // 1. 状態管理
+  // 1. 状態管理（旧バージョンからの自動マイグレーション＆データサニタイズ対応）
   const [currentTime, setCurrentTime] = useState<Date>(() => new Date());
   const [selectedTime, setSelectedTime] = useState<Date>(() => {
     const d = new Date();
@@ -47,62 +41,11 @@ export default function App() {
     return d;
   });
 
-  const [bedTimeStr, setBedTimeStr] = useState<string>(() => {
-    return localStorage.getItem(STORAGE_KEY_BEDTIME) || '23:30';
-  });
-
-  const [metabolicSpeed, setMetabolicSpeed] = useState<MetabolicSpeed>(() => {
-    return (localStorage.getItem(STORAGE_KEY_SPEED) as MetabolicSpeed) || 'standard';
-  });
-
-  const [settings, setSettings] = useState<AppSettings>(() => {
-    const saved = localStorage.getItem(STORAGE_KEY_SETTINGS);
-    if (saved) {
-      try {
-        return { ...DEFAULT_SETTINGS, ...JSON.parse(saved) };
-      } catch (e) {
-        console.error('Failed to parse settings', e);
-      }
-    }
-    return DEFAULT_SETTINGS;
-  });
-
-  const [presets, setPresets] = useState<BeveragePreset[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEY_PRESETS);
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error('Failed to parse presets', e);
-      }
-    }
-    return DEFAULT_NESCAFE_PRESETS;
-  });
-
-  const [events, setEvents] = useState<IntakeEvent[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEY_EVENTS);
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        return cleanOldEvents(parsed, new Date());
-      } catch (e) {
-        console.error('Failed to parse events', e);
-      }
-    }
-    // 初期サンプル（本日の朝8:00にネスカフェ2.0g）
-    const sampleDate = new Date();
-    sampleDate.setHours(8, 0, 0, 0);
-    return [
-      {
-        id: 'sample-morning',
-        timestamp: sampleDate.toISOString(),
-        name: 'ネスカフェ (2.0g)',
-        category: 'nescafe',
-        powderGrams: 2.0,
-        caffeineMg: 80,
-      },
-    ];
-  });
+  const [bedTimeStr, setBedTimeStr] = useState<string>(() => loadBedTimeFromStorage());
+  const [metabolicSpeed, setMetabolicSpeed] = useState<MetabolicSpeed>(() => loadMetabolicSpeedFromStorage());
+  const [settings, setSettings] = useState<AppSettings>(() => loadSettingsFromStorage());
+  const [presets, setPresets] = useState<BeveragePreset[]>(() => loadPresetsFromStorage());
+  const [events, setEvents] = useState<IntakeEvent[]>(() => loadEventsFromStorage(new Date()));
 
   // モーダル状態
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -125,23 +68,23 @@ export default function App() {
 
   // LocalStorage 永続化
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_EVENTS, JSON.stringify(events));
+    localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(events));
   }, [events]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_PRESETS, JSON.stringify(presets));
+    localStorage.setItem(STORAGE_KEYS.PRESETS, JSON.stringify(presets));
   }, [presets]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_BEDTIME, bedTimeStr);
+    localStorage.setItem(STORAGE_KEYS.BEDTIME, bedTimeStr);
   }, [bedTimeStr]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_SPEED, metabolicSpeed);
+    localStorage.setItem(STORAGE_KEYS.SPEED, metabolicSpeed);
   }, [metabolicSpeed]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings));
+    localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
   }, [settings]);
 
   // 就寝時刻 Date 算出
@@ -230,32 +173,17 @@ export default function App() {
 
   const handleResetPresets = () => {
     setPresets(DEFAULT_NESCAFE_PRESETS);
-    localStorage.setItem(STORAGE_KEY_PRESETS, JSON.stringify(DEFAULT_NESCAFE_PRESETS));
+    localStorage.setItem(STORAGE_KEYS.PRESETS, JSON.stringify(DEFAULT_NESCAFE_PRESETS));
   };
 
   const handleResetAllData = () => {
-    localStorage.removeItem(STORAGE_KEY_EVENTS);
-    localStorage.removeItem(STORAGE_KEY_PRESETS);
-    localStorage.removeItem(STORAGE_KEY_BEDTIME);
-    localStorage.removeItem(STORAGE_KEY_SPEED);
-    localStorage.removeItem(STORAGE_KEY_SETTINGS);
+    clearAllCafeLimitStorage();
 
-    setSettings(DEFAULT_SETTINGS);
+    setSettings({ ...DEFAULT_SETTINGS });
     setPresets(DEFAULT_NESCAFE_PRESETS);
     setBedTimeStr('23:30');
     setMetabolicSpeed('standard');
-    const sampleDate = new Date();
-    sampleDate.setHours(8, 0, 0, 0);
-    setEvents([
-      {
-        id: 'sample-morning',
-        timestamp: sampleDate.toISOString(),
-        name: 'ネスカフェ (2.0g)',
-        category: 'nescafe',
-        powderGrams: 2.0,
-        caffeineMg: 80,
-      },
-    ]);
+    setEvents(createDefaultSampleEvents(new Date()));
   };
 
   // グラフから空いている時間をタップ ➔ スライダーを合わせてパネルへスクロール

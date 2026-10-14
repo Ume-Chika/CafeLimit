@@ -2,6 +2,7 @@ import React from 'react';
 import { X, Check, Clock, Plus } from 'lucide-react';
 import type { BeveragePreset } from '../types/caffeine';
 import { NescafeCoffeeCup } from './NescafeCoffeeCup';
+import { formatDurationDisplay } from '../utils/caffeineEngine';
 import { format, isToday, isTomorrow, isYesterday } from 'date-fns';
 
 interface ConfirmAddModalProps {
@@ -31,14 +32,6 @@ export const ConfirmAddModal: React.FC<ConfirmAddModalProps> = ({
   };
 
   const duration = preset.drinkingDurationMinutes || defaultDrinkingDuration;
-
-  const formatDuration = (minutes: number = 10): string => {
-    if (minutes < 60) return `${minutes}分`;
-    const hours = Math.floor(minutes / 60);
-    const rem = minutes % 60;
-    if (rem === 0) return `${hours}時間`;
-    return `${hours}時間${rem}分`;
-  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-xs animate-fadeIn">
@@ -107,7 +100,7 @@ export const ConfirmAddModal: React.FC<ConfirmAddModalProps> = ({
             <div className="flex items-center justify-between px-1.5 text-stone-600 font-bold border-t border-stone-200/60 pt-2">
               <span>飲む時間</span>
               <span className="font-bold text-amber-900 bg-amber-100/80 px-2 py-0.5 rounded-lg text-[11px]">
-                約 {formatDuration(duration)} かけて飲む
+                約 {formatDurationDisplay(duration)} かけて飲む
               </span>
             </div>
           </div>
