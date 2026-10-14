@@ -1,0 +1,44 @@
+{
+  "name": "CafeLimit — カフェイン＆睡眠シミュレーター",
+  "short_name": "CafeLimit",
+  "description": "ネスカフェやエナジードリンクのカフェイン代謝・睡眠影響を可視化する双方向シミュレーター",
+  "start_url": "/",
+  "id": "/",
+  "display": "standalone",
+  "background_color": "#F8F5EE",
+  "theme_color": "#3E271E",
+  "orientation": "portrait-primary",
+  "lang": "ja",
+  "categories": ["health", "lifestyle", "utilities"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
