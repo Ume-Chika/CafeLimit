@@ -27,18 +27,9 @@ export function getUpcomingBedTime(currentTime: Date, bedTimeStr: string): Date 
   const bedDate = new Date(currentTime);
   bedDate.setHours(hours, minutes, 0, 0);
 
-  // 就寝時刻が深夜（0時〜5時）の場合
-  if (hours < 6) {
-    if (currentTime.getHours() >= 6) {
-      // 昼や夜から見て今夜寝る（＝翌日未明）
-      bedDate.setDate(bedDate.getDate() + 1);
-    }
-  } else {
-    // 就寝時刻が夜（6時以降）の場合
-    if (currentTime.getHours() < 6) {
-      // 現在が深夜3時で就寝が23:30の場合、今夜の就寝は今日23:30
-      bedDate.setHours(hours, minutes, 0, 0);
-    }
+  // 就寝時刻が深夜（0時〜5時）の場合、日中（6時以降）から見て今夜＝翌日未明として扱う
+  if (hours < 6 && currentTime.getHours() >= 6) {
+    bedDate.setDate(bedDate.getDate() + 1);
   }
   return bedDate;
 }
@@ -108,7 +99,10 @@ export function calculateRemainingCaffeine(
 
   const tau1 = Math.min(elapsedHours, Td);
   if (Math.abs(ka - ke) < 0.0001) {
-    return initialMg * ka * elapsedHours * Math.exp(-ke * elapsedHours);
+    const tRem = elapsedHours - tau1;
+    const limitTerm =
+      ((1 + ke * tRem) * Math.exp(-ke * tRem) - (1 + ke * elapsedHours) * Math.exp(-ke * elapsedHours)) / ke;
+    return Math.max(0, (initialMg / Td) * limitTerm);
   }
 
   const termKe = (Math.exp(-ke * (elapsedHours - tau1)) - Math.exp(-ke * elapsedHours)) / ke;
