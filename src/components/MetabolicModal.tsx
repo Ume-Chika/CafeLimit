@@ -42,33 +42,37 @@ export const MetabolicModal: React.FC<MetabolicModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3.5 sm:p-4 bg-stone-900/60 backdrop-blur-xs animate-fadeIn">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-stone-900/60 backdrop-blur-xs animate-fadeIn overscroll-contain"
+      onClick={onClose}
+    >
       <div
-        className="bg-white rounded-3xl shadow-xl border border-stone-200 w-full max-w-md max-h-[90vh] overflow-y-auto flex flex-col"
+        className="bg-white rounded-2xl shadow-xl border border-stone-200 w-full max-w-md max-h-[85dvh] flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* ヘッダー */}
-        <div className="p-4 border-b border-stone-100 flex items-center justify-between sticky top-0 bg-white/95 backdrop-blur-xs z-10">
+        {/* ヘッダー（常に固定表示・×ボタンが隠れない） */}
+        <div className="shrink-0 p-4 border-b border-stone-100 flex items-center justify-between bg-white z-10">
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-xl bg-amber-100/80 text-amber-900 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-[#FAF7F2] text-[#3E2718] border border-stone-200/70 flex items-center justify-center">
               <Sliders className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-sm font-black text-stone-900">シミュレーション・体質設定</h3>
+              <h3 className="text-sm font-semibold text-stone-900">シミュレーション・体質設定</h3>
               <p className="text-[11px] text-stone-500">体重・代謝速度・快眠基準・飲用時間</p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="w-7 h-7 rounded-full hover:bg-stone-100 text-stone-400 hover:text-stone-700 flex items-center justify-center cursor-pointer transition-colors"
+            className="w-7 h-7 rounded-md hover:bg-stone-100 text-stone-400 hover:text-stone-700 flex items-center justify-center cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3E2718]"
+            aria-label="閉じる"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* 設定フォーム（身体プロファイル順：体重 ➔ 代謝 ➔ 快眠基準 ➔ 飲用時間） */}
-        <div className="p-4 sm:p-5 space-y-3.5 text-xs">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5 text-xs overscroll-contain">
           {/* 1. 体重 */}
           <div className="p-3 bg-stone-50/70 rounded-2xl border border-stone-200/80 space-y-1.5">
             <div className="flex items-center space-x-1.5 font-black text-stone-800">
@@ -162,7 +166,7 @@ export const MetabolicModal: React.FC<MetabolicModalProps> = ({
               className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-xs font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer"
             >
               <option value={15}>厳格 15mg以下</option>
-              <option value={25}>標準 25mg以下（推奨）</option>
+              <option value={25}>標準 25mg以下</option>
               <option value={35}>寛容 35mg以下</option>
               <option value={50}>高耐性 50mg以下</option>
             </select>
@@ -206,11 +210,11 @@ export const MetabolicModal: React.FC<MetabolicModalProps> = ({
         </div>
 
         {/* フッター */}
-        <div className="p-4 border-t border-stone-100 bg-stone-50/50 flex items-center justify-end">
+        <div className="shrink-0 p-3 sm:p-4 border-t border-stone-100 bg-white flex items-center justify-end">
           <button
             type="button"
             onClick={onClose}
-            className="w-full py-2.5 bg-[#3E271E] hover:bg-stone-800 active:scale-95 text-white text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer text-center"
+            className="w-full py-2.5 bg-[#3E2718] hover:bg-[#2B1B10] active:scale-98 text-white text-xs font-semibold rounded-xl shadow-xs transition-all cursor-pointer text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3E2718]"
           >
             設定を完了する
           </button>

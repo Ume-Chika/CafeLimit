@@ -390,9 +390,9 @@ export const AddPresetModal: React.FC<AddPresetModalProps> = ({
               <div className="pt-2">
                 <button
                   type="submit"
-                  className="w-full py-2.5 bg-[#3E271E] hover:bg-stone-800 text-white font-black rounded-xl shadow-xs transition-all active:scale-[0.98] flex items-center justify-center space-x-1.5 cursor-pointer"
+                  className="w-full py-2.5 bg-[#D8232A] hover:bg-[#C01E24] text-white font-semibold rounded-xl shadow-xs transition-all active:scale-[0.98] flex items-center justify-center space-x-1.5 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600"
                 >
-                  <Sparkles className="w-4 h-4" />
+                  <Plus className="w-4 h-4" />
                   <span>登録してパネルに追加</span>
                 </button>
               </div>

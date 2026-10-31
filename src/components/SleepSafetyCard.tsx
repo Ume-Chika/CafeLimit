@@ -37,7 +37,7 @@ export const SleepSafetyCard: React.FC<SleepSafetyCardProps> = ({
       return {
         main: '0',
         unit: settings.maxIntakeUnit === 'powder' ? 'g' : settings.maxIntakeUnit === 'caffeine' ? 'mg' : '杯/缶',
-        sub: '（制限推奨）',
+        sub: '制限推奨',
       };
     }
 
@@ -45,7 +45,7 @@ export const SleepSafetyCard: React.FC<SleepSafetyCardProps> = ({
       return {
         main: `${maxSafePowderGrams}`,
         unit: 'g',
-        sub: `(約 ${Math.round(maxSafePowderGrams * 40)}mg)`,
+        sub: `約 ${Math.round(maxSafePowderGrams * 40)}mg`,
       };
     }
 
@@ -53,7 +53,7 @@ export const SleepSafetyCard: React.FC<SleepSafetyCardProps> = ({
       return {
         main: `${maxSafeCaffeineMg}`,
         unit: 'mg',
-        sub: `(粉末換算 約 ${(maxSafeCaffeineMg / 40).toFixed(1)}g)`,
+        sub: `粉末換算 約 ${(maxSafeCaffeineMg / 40).toFixed(1)}g`,
       };
     }
 
@@ -64,28 +64,28 @@ export const SleepSafetyCard: React.FC<SleepSafetyCardProps> = ({
     return {
       main: `約 ${count}`,
       unit: unitLabel,
-      sub: `(${targetPreset ? targetPreset.name : '標準2g'}換算)`,
+      sub: `${targetPreset ? targetPreset.name : '標準2g'}換算`,
     };
   };
 
   const maxIntakeData = renderMaxIntakeText();
 
   return (
-    <div id="sleep-safety-section" className="bg-white rounded-3xl shadow-sm border border-stone-200/90 overflow-hidden space-y-0">
+    <div id="sleep-safety-section" className="bg-white rounded-2xl shadow-xs border border-stone-200/80 overflow-hidden space-y-0">
       {/* 上部ヘッダー：設定コントロールバー */}
-      <div className="bg-[#241C18] text-stone-200 px-3.5 sm:px-6 py-2 flex items-center justify-between gap-2">
-        {/* 就寝時刻（タップでOS標準の直感的なタイムピッカーが確実に起動） */}
+      <div className="bg-[#3E2718] text-stone-200 px-4 sm:px-5 py-2.5 flex items-center justify-between gap-2">
+        {/* 就寝時刻 */}
         <label
           htmlFor="bedtime-picker-input"
-          className="relative flex items-center space-x-1.5 bg-stone-800/90 hover:bg-stone-700/90 active:scale-95 text-white px-3 py-1.5 rounded-xl border border-stone-700 transition-all cursor-pointer group shadow-xs select-none shrink-0"
+          className="relative flex items-center space-x-1.5 bg-white/10 hover:bg-white/15 active:scale-98 text-white px-3 py-1.5 rounded-lg border border-white/10 transition-colors cursor-pointer group select-none shrink-0"
           title="タップして就寝時刻を変更"
         >
-          <Moon className="w-3.5 h-3.5 text-amber-400 group-hover:rotate-12 transition-transform shrink-0" />
-          <span className="text-[11px] text-stone-300 font-medium">就寝</span>
-          <span className="font-mono font-black text-xs text-white tracking-wide">{bedTime}</span>
-          <ChevronRight className="w-3.5 h-3.5 text-stone-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+          <Moon className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+          <span className="text-xs text-stone-300 font-medium">就寝</span>
+          <span className="font-mono font-semibold text-xs text-white tracking-wide tabular-nums">{bedTime}</span>
+          <ChevronRight className="w-3.5 h-3.5 text-stone-400 shrink-0" />
 
-          {/* ネイティブ input を前面に透明で重ね、タップを100%直接検知 */}
+          {/* ネイティブ input を前面に透明で重ね、タップを確実に検知 */}
           <input
             id="bedtime-picker-input"
             type="time"
@@ -100,25 +100,25 @@ export const SleepSafetyCard: React.FC<SleepSafetyCardProps> = ({
         <button
           type="button"
           onClick={onOpenMetabolicModal}
-          className="flex items-center space-x-1.5 bg-stone-800/90 hover:bg-stone-700/90 active:scale-95 text-white px-3 py-1.5 rounded-xl border border-stone-700 text-[11px] font-bold transition-all cursor-pointer group shadow-xs select-none truncate"
+          className="flex items-center space-x-1.5 bg-white/10 hover:bg-white/15 active:scale-98 text-white px-3 py-1.5 rounded-lg border border-white/10 text-xs font-medium transition-colors cursor-pointer select-none truncate"
           title="タップして体重・体質・シミュレーション設定を変更"
         >
-          <Activity className="w-3.5 h-3.5 text-amber-400 group-hover:rotate-12 transition-transform shrink-0" />
-          <span className="text-stone-300 font-medium hidden xs:inline">体質・体重</span>
-          <span className="font-mono font-bold text-white">{settings.bodyWeightKg ?? 60}kg</span>
-          <span className="text-stone-500 font-normal">/</span>
-          <span className="text-stone-200 font-bold">
+          <Activity className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+          <span className="text-stone-300 font-medium hidden xs:inline">体質</span>
+          <span className="font-mono font-semibold text-white tabular-nums">{settings.bodyWeightKg ?? 60}kg</span>
+          <span className="text-stone-400 font-normal">/</span>
+          <span className="text-stone-200 font-medium">
             {metabolicSpeed === 'custom' ? `${settings.customHalfLifeHours.toFixed(1)}h` : currentProfile.label.split('（')[0]}
           </span>
-          <ChevronRight className="w-3.5 h-3.5 text-stone-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+          <ChevronRight className="w-3.5 h-3.5 text-stone-400 shrink-0" />
         </button>
       </div>
 
       {/* メインステータスエリア */}
-      <div className="p-4 sm:p-6 space-y-4">
+      <div className="p-4 sm:p-5 space-y-4">
         {/* 判定カード */}
         <div
-          className="rounded-2xl p-4 sm:p-5 border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
+          className="rounded-xl p-4 sm:p-4.5 border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
           style={{
             backgroundColor: evaluation.bgColor,
             borderColor: evaluation.borderColor,
@@ -127,65 +127,65 @@ export const SleepSafetyCard: React.FC<SleepSafetyCardProps> = ({
           <div>
             <div className="flex items-center space-x-2">
               <span
-                className="font-black text-[11px] px-2.5 py-0.5 rounded-full uppercase tracking-wider text-white"
+                className="font-semibold text-xs px-2 py-0.5 rounded-md tracking-wide text-white"
                 style={{ backgroundColor: evaluation.color }}
               >
                 {evaluation.status}
               </span>
-              <h3 className="font-black text-stone-900 text-base sm:text-lg">
+              <h3 className="font-bold text-stone-900 text-base">
                 {evaluation.label}
               </h3>
             </div>
-            <p className="text-xs text-stone-600 mt-1">
+            <p className="text-xs text-stone-600 mt-1 leading-relaxed">
               {evaluation.description}
             </p>
           </div>
 
-          <div className="flex items-baseline space-x-1 sm:text-right">
-            <span className="text-xs font-bold text-stone-500 mr-1 sm:hidden">就寝時残存:</span>
+          <div className="flex items-baseline space-x-1 sm:text-right shrink-0">
+            <span className="text-xs text-stone-500 mr-1 sm:hidden">就寝時残存:</span>
             <span
-              className="text-3xl font-black font-mono tracking-tight"
+              className="text-3xl font-bold font-mono tracking-tight tabular-nums"
               style={{ color: evaluation.color }}
             >
               {bedCaffeineMg}
             </span>
-            <span className="text-xs font-bold text-stone-600">mg</span>
+            <span className="text-xs font-semibold text-stone-500">mg</span>
           </div>
         </div>
 
         {/* ゲージメーター */}
-        <div className="space-y-1">
+        <div className="space-y-1.5">
           <div className="h-2 w-full bg-stone-100 rounded-full overflow-hidden flex">
             <div
-              className="h-full rounded-full transition-all duration-500 ease-out"
+              className="h-full rounded-full transition-[width] duration-300 ease-out"
               style={{
                 width: `${gaugePercent}%`,
                 backgroundColor: evaluation.color,
               }}
             />
           </div>
-          <div className="flex justify-between text-[10px] font-bold text-stone-600 px-0.5">
-            <span className="text-emerald-700">0mg (快眠)</span>
-            <span className="text-emerald-700">{safeTh}mg (安全上限)</span>
-            <span className="text-amber-700">{Number((safeTh * 2).toFixed(1))}mg (警戒)</span>
-            <span className="text-red-700">&ge;{Number((safeTh * 3).toFixed(1))}mg</span>
+          <div className="flex justify-between text-[10px] font-mono tabular-nums text-stone-500 px-0.5">
+            <span>0mg 快眠</span>
+            <span>{safeTh}mg 閾値</span>
+            <span>{Number((safeTh * 2).toFixed(1))}mg 警戒</span>
+            <span>&ge;{Number((safeTh * 3).toFixed(1))}mg</span>
           </div>
         </div>
 
         {/* 2つの逆算インサイト */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-0.5">
           {/* 逆算①：今飲める最大量 */}
-          <div className="bg-[#FAF7F2] rounded-2xl p-3.5 border border-amber-900/10 flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-[#3E271E] text-white flex items-center justify-center shrink-0 shadow-xs">
-              <Coffee className="w-5 h-5" />
+          <div className="bg-[#FAF7F2] rounded-xl p-3.5 border border-stone-200/70 flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-lg bg-[#3E2718] text-white flex items-center justify-center shrink-0 shadow-xs">
+              <Coffee className="w-5 h-5 text-amber-200" />
             </div>
-            <div>
-              <span className="text-[11px] font-bold text-stone-500 block">今飲める最大量</span>
-              <div className="flex items-baseline space-x-1">
-                <span className="text-xl font-black font-mono text-[#3E271E]">
-                  {maxIntakeData.main} <span className="text-sm font-bold">{maxIntakeData.unit}</span>
+            <div className="min-w-0">
+              <span className="text-xs text-stone-500 font-medium block">今飲める最大量</span>
+              <div className="flex items-baseline space-x-1.5">
+                <span className="text-lg font-bold font-mono tabular-nums text-stone-900">
+                  {maxIntakeData.main} <span className="text-xs font-normal text-stone-600">{maxIntakeData.unit}</span>
                 </span>
-                <span className="text-[11px] font-semibold text-stone-600">
+                <span className="text-xs text-stone-500 font-normal truncate">
                   {maxIntakeData.sub}
                 </span>
               </div>
@@ -193,20 +193,20 @@ export const SleepSafetyCard: React.FC<SleepSafetyCardProps> = ({
           </div>
 
           {/* 逆算②：指定ドリンクの最終時刻 */}
-          <div className={`${summary.isDeadlinePassed ? 'bg-stone-100/70 border-stone-200/80' : 'bg-[#F0F5FA] border-sky-900/10'} rounded-2xl p-3.5 border flex items-center space-x-3 transition-colors`}>
-            <div className={`w-10 h-10 rounded-xl ${summary.isDeadlinePassed ? 'bg-stone-400' : 'bg-sky-700'} text-white flex items-center justify-center shrink-0 shadow-xs transition-colors`}>
-              <Clock className="w-5 h-5" />
+          <div className={`${summary.isDeadlinePassed ? 'bg-stone-50 border-stone-200/70' : 'bg-[#FAF7F2] border-stone-200/70'} rounded-xl p-3.5 border flex items-center space-x-3 transition-colors`}>
+            <div className={`w-10 h-10 rounded-lg ${summary.isDeadlinePassed ? 'bg-stone-300' : 'bg-[#3E2718]'} text-white flex items-center justify-center shrink-0 shadow-xs transition-colors`}>
+              <Clock className="w-5 h-5 text-amber-200" />
             </div>
-            <div>
-              <span className="text-[11px] font-bold text-stone-500 block line-clamp-1">
+            <div className="min-w-0">
+              <span className="text-xs text-stone-500 font-medium block truncate">
                 {targetPresetName} 最終時刻
               </span>
-              <div className="flex items-baseline space-x-1">
-                <span className={`text-xl font-black font-mono ${summary.isDeadlinePassed ? 'text-stone-400' : 'text-sky-950'}`}>
+              <div className="flex items-baseline space-x-1.5">
+                <span className={`text-lg font-bold font-mono tabular-nums ${summary.isDeadlinePassed ? 'text-stone-400' : 'text-stone-900'}`}>
                   {summary.isDeadlinePassed ? '--:--' : format(deadlineForTarget, 'HH:mm')}
                 </span>
                 {!summary.isDeadlinePassed && (
-                  <span className="text-[11px] font-semibold text-stone-600">まで</span>
+                  <span className="text-xs text-stone-500 font-normal">まで</span>
                 )}
               </div>
             </div>

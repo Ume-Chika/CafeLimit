@@ -40,19 +40,21 @@ export const CoffeePanelList: React.FC<CoffeePanelListProps> = ({
 
   return (
     <div className="space-y-2.5">
-      {/* ヘッダー（右上の重複ボタンは削除し、末尾カードに一本化） */}
+      {/* ヘッダー */}
       <div className="flex items-center justify-between px-1">
-        <span className="text-xs font-black text-stone-700">
-          タップして指定時刻に追加
-        </span>
-        <span className="flex items-center space-x-0.5 text-[11px] text-stone-400 font-medium">
-          <MoreVertical className="w-3 h-3 inline-block" />
-          <span>で編集</span>
-        </span>
+        <h3 className="text-xs font-semibold text-stone-900">
+          ドリンク選択
+        </h3>
+        {onSelectPresetToEdit && (
+          <span className="flex items-center space-x-0.5 text-[11px] text-stone-600 font-normal">
+            <MoreVertical className="w-3 h-3 inline-block" />
+            <span>編集</span>
+          </span>
+        )}
       </div>
 
-      {/* ネスカフェ＆エナドリ対応カードグリッド */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
+      {/* ドリンク対応カードグリッド */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
         {presets.map((preset) => {
           const isAdded = justAddedId === preset.id;
           const isNative = preset.isNescafeNative;
@@ -62,10 +64,10 @@ export const CoffeePanelList: React.FC<CoffeePanelListProps> = ({
             <div
               key={preset.id}
               onClick={() => handleCardClick(preset)}
-              className={`relative flex flex-col items-center justify-between p-3.5 rounded-2xl bg-white border transition-all duration-150 cursor-pointer select-none group active:scale-95 ${
+              className={`relative flex flex-col items-center justify-between p-3.5 rounded-2xl bg-white border transition-all duration-150 cursor-pointer select-none group active:scale-98 ${
                 isAdded
-                  ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/30'
-                  : 'border-stone-200/90 hover:border-amber-800 hover:shadow-md hover:-translate-y-0.5'
+                  ? 'border-emerald-600 bg-emerald-50/50 ring-2 ring-emerald-500/20'
+                  : 'border-stone-200/80 hover:border-stone-400 hover:shadow-xs'
               }`}
             >
               {/* パネル編集ボタン */}
@@ -76,8 +78,9 @@ export const CoffeePanelList: React.FC<CoffeePanelListProps> = ({
                     e.stopPropagation();
                     onSelectPresetToEdit(preset);
                   }}
-                  className="absolute top-1.5 right-1.5 p-1 text-stone-400 hover:text-stone-800 hover:bg-stone-100 rounded-full opacity-60 group-hover:opacity-100 transition-opacity cursor-pointer"
+                  className="absolute top-1.5 right-1.5 p-1.5 text-stone-400 hover:text-stone-700 hover:bg-stone-100 rounded-lg opacity-60 group-hover:opacity-100 transition-opacity cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3E2718]"
                   title="パネルを編集・削除"
+                  aria-label={`${preset.name} を編集`}
                 >
                   <MoreVertical className="w-3.5 h-3.5" />
                 </button>
@@ -93,12 +96,12 @@ export const CoffeePanelList: React.FC<CoffeePanelListProps> = ({
               </div>
 
               {/* レシピ名 */}
-              <span className="text-xs font-bold text-stone-900 text-center line-clamp-1 mt-2">
+              <span className="text-xs font-semibold text-stone-900 text-center line-clamp-1 mt-2">
                 {preset.name}
               </span>
 
               {/* カフェイン量・粉末g / 内容量ml / 飲用時間 */}
-              <div className="mt-1 flex items-center justify-center space-x-1 text-[10px] font-bold text-stone-500">
+              <div className="mt-1 flex items-center justify-center space-x-1 text-[10px] text-stone-500 font-mono tabular-nums">
                 {isNative && preset.powderGrams && (
                   <span>{preset.powderGrams}g</span>
                 )}
@@ -106,15 +109,15 @@ export const CoffeePanelList: React.FC<CoffeePanelListProps> = ({
                   <span>{preset.volumeMl}ml</span>
                 )}
                 <span className="text-stone-300">/</span>
-                <span className="text-stone-600 font-medium">{formatDurationShort(duration)}</span>
-                <span className="text-xs font-black font-mono text-amber-900 bg-amber-50 px-1.5 py-0.5 rounded-md border border-amber-200/60 whitespace-nowrap shrink-0">
+                <span className="text-stone-500 font-sans">{formatDurationShort(duration)}</span>
+                <span className="text-xs font-semibold font-mono text-[#3E2718] bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200/60 whitespace-nowrap shrink-0">
                   +{preset.caffeineMg}mg
                 </span>
               </div>
 
               {/* 追加完了ポップアップ */}
               {isAdded && (
-                <div className="absolute inset-0 flex items-center justify-center bg-emerald-600/95 rounded-2xl text-white font-bold text-xs shadow-lg animate-fadeIn">
+                <div className="absolute inset-0 flex items-center justify-center bg-emerald-700/95 rounded-2xl text-white font-medium text-xs shadow-md animate-fadeIn">
                   <Check className="w-4 h-4 mr-1" /> 追加しました
                 </div>
               )}
@@ -122,15 +125,15 @@ export const CoffeePanelList: React.FC<CoffeePanelListProps> = ({
           );
         })}
 
-        {/* ドリンク追加 点線カード（一本化） */}
+        {/* ドリンク追加 点線カード */}
         <div
           onClick={onOpenAddModal}
-          className="flex flex-col items-center justify-center p-3 rounded-2xl border-2 border-dashed border-stone-300 hover:border-amber-800 bg-white/50 hover:bg-amber-50/30 cursor-pointer transition-all min-h-[120px] active:scale-95"
+          className="flex flex-col items-center justify-center p-3 rounded-2xl border-2 border-dashed border-stone-200 hover:border-stone-400 bg-white/40 hover:bg-white cursor-pointer transition-all min-h-[120px] active:scale-98"
         >
           <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-stone-500 mb-1">
             <Plus className="w-4 h-4" />
           </div>
-          <span className="text-xs font-bold text-stone-600">ドリンク追加</span>
+          <span className="text-xs font-medium text-stone-600">ドリンク追加</span>
         </div>
       </div>
     </div>

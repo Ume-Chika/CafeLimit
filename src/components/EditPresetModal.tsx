@@ -273,7 +273,7 @@ const EditPresetModalContent: React.FC<EditPresetModalContentProps> = ({
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-[#3E271E] hover:bg-stone-800 text-white rounded-xl font-black flex items-center space-x-1 shadow-xs transition-all cursor-pointer active:scale-95"
+                className="px-4 py-2 bg-[#D8232A] hover:bg-[#C01E24] text-white rounded-xl font-semibold flex items-center space-x-1 shadow-xs transition-all cursor-pointer active:scale-98 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600"
               >
                 <Check className="w-4 h-4" />
                 <span>保存する</span>
