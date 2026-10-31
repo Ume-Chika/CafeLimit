@@ -198,31 +198,36 @@ export default function App() {
     <div className="min-h-screen bg-[#F8F5EE] text-stone-900 flex flex-col font-sans selection:bg-amber-200">
       {/* ヘッダー */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-stone-200/80 px-4 sm:px-6 py-2.5 shadow-xs">
-        <div className="max-w-3xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-xl bg-[#3E271E] flex items-center justify-center text-white shadow-xs">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <div className="flex items-center space-x-2.5">
+            <div className="w-8 h-8 rounded-xl bg-[#3E2718] flex items-center justify-center text-white shadow-xs">
               <Coffee className="w-4 h-4" />
             </div>
-            <h1 className="text-base font-black tracking-tight text-stone-900">
-              CafeLimit
-            </h1>
+            <div className="flex items-baseline space-x-2">
+              <h1 className="text-base font-bold tracking-tight text-stone-900">
+                CafeLimit
+              </h1>
+              <span className="hidden sm:inline-block text-[11px] text-stone-600 font-medium">
+                カフェイン動態・睡眠シミュレーター
+              </span>
+            </div>
           </div>
 
           <div className="flex items-center space-x-1 sm:space-x-2">
             <button
               type="button"
               onClick={() => setShowScientificModal(true)}
-              className="flex items-center space-x-1 px-2.5 py-1 rounded-xl text-stone-600 hover:text-stone-900 text-xs font-bold transition-all cursor-pointer"
+              className="flex items-center space-x-1 px-2.5 py-1.5 rounded-xl text-stone-600 hover:text-stone-900 hover:bg-stone-100/80 text-xs font-medium transition-all cursor-pointer"
               title="科学的根拠"
             >
-              <Info className="w-4 h-4 text-stone-400" />
-              <span className="text-[11px] hidden sm:inline">科学モデル</span>
+              <Info className="w-4 h-4 text-stone-600" />
+              <span className="text-xs hidden sm:inline">科学モデル</span>
             </button>
 
             <button
               type="button"
               onClick={() => setIsSettingsModalOpen(true)}
-              className="p-1.5 rounded-xl text-stone-500 hover:text-stone-900 hover:bg-stone-100 transition-all cursor-pointer"
+              className="p-1.5 rounded-xl text-stone-600 hover:text-stone-900 hover:bg-stone-100/80 transition-all cursor-pointer"
               title="アプリ設定"
             >
               <Settings className="w-4 h-4" />
@@ -231,77 +236,79 @@ export default function App() {
         </div>
       </header>
 
-      {/* メインコンテンツ（流れるような縦動線） */}
-      <main className="flex-1 max-w-3xl w-full mx-auto p-3.5 sm:p-5 space-y-4">
-        {/* 1. 睡眠判定 ＆ 逆算カード */}
-        <section ref={sleepSectionRef}>
-          <SleepSafetyCard
-            summary={simulationSummary}
-            bedTime={bedTimeStr}
-            onChangeBedTime={setBedTimeStr}
-            metabolicSpeed={metabolicSpeed}
-            onOpenMetabolicModal={() => setIsMetabolicModalOpen(true)}
-            settings={settings}
-            targetPreset={targetPreset}
-          />
-        </section>
+      {/* メインコンテンツ（モバイルは縦ストリーム、デスクトップは計器盤2カラム） */}
+      <main className="flex-1 max-w-6xl w-full mx-auto p-3.5 sm:p-5 lg:p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 items-start">
+          {/* 左カラム：睡眠判定 ＆ カフェイン減衰チャート（計測器エリア） */}
+          <div className="lg:col-span-7 space-y-4">
+            <section ref={sleepSectionRef}>
+              <SleepSafetyCard
+                summary={simulationSummary}
+                bedTime={bedTimeStr}
+                onChangeBedTime={setBedTimeStr}
+                metabolicSpeed={metabolicSpeed}
+                onOpenMetabolicModal={() => setIsMetabolicModalOpen(true)}
+                settings={settings}
+                targetPreset={targetPreset}
+              />
+            </section>
 
-        {/* 2. 時系列グラフ（タップでイベント編集・追加・就寝変更） */}
-        <section>
-          <CaffeineChart
-            points={simulationSummary.hourlyPoints}
-            events={events}
-            currentTime={currentTime}
-            bedTime={bedTimeDate}
-            safeSleepThresholdMg={effectiveSafeThresholdMg}
-            focusThresholdMg={effectiveFocusThresholdMg}
-            showFocusZone={settings.showFocusZone}
-            onSelectEventToEdit={(ev) => setEditingEvent(ev)}
-            onSelectTimeToBrew={handleSelectTimeToBrew}
-          />
-        </section>
+            <section>
+              <CaffeineChart
+                points={simulationSummary.hourlyPoints}
+                events={events}
+                currentTime={currentTime}
+                bedTime={bedTimeDate}
+                safeSleepThresholdMg={effectiveSafeThresholdMg}
+                focusThresholdMg={effectiveFocusThresholdMg}
+                showFocusZone={settings.showFocusZone}
+                onSelectEventToEdit={(ev) => setEditingEvent(ev)}
+                onSelectTimeToBrew={handleSelectTimeToBrew}
+              />
+            </section>
+          </div>
 
-        {/* 3. 時間指定スライダー ＆ 真下にクイック追加パネル */}
-        <section ref={panelSectionRef} className="space-y-3 bg-white/60 p-4 rounded-3xl border border-stone-200/80 scroll-mt-20">
-          {/* 時間指定スライダー */}
-          <TimeSliderPicker
-            selectedTime={selectedTime}
-            onChangeTime={setSelectedTime}
-            baseTime={currentTime}
-          />
+          {/* 右カラム：時間指定スライダー ＆ ドリンクパネル ＆ タイムライン（操作・記録エリア） */}
+          <div className="lg:col-span-5 space-y-4">
+            <section ref={panelSectionRef} className="space-y-4 scroll-mt-20">
+              <TimeSliderPicker
+                selectedTime={selectedTime}
+                onChangeTime={setSelectedTime}
+                baseTime={currentTime}
+              />
 
-          {/* スライダーの真下に配置されたクイック摂取パネル */}
-          <CoffeePanelList
-            presets={presets}
-            onAddEvent={handleAddIntakeEvent}
-            onOpenAddModal={() => setIsAddModalOpen(true)}
-            onSelectPresetToEdit={(p) => setEditingPreset(p)}
-            onSelectPresetToConfirm={(p) => setConfirmingPreset(p)}
-            confirmBeforeAdd={settings.confirmBeforeAdd}
-            defaultDrinkingDuration={settings.drinkingDurationMinutes || 10}
-          />
-        </section>
+              <CoffeePanelList
+                presets={presets}
+                onAddEvent={handleAddIntakeEvent}
+                onOpenAddModal={() => setIsAddModalOpen(true)}
+                onSelectPresetToEdit={(p) => setEditingPreset(p)}
+                onSelectPresetToConfirm={(p) => setConfirmingPreset(p)}
+                confirmBeforeAdd={settings.confirmBeforeAdd}
+                defaultDrinkingDuration={settings.drinkingDurationMinutes || 10}
+              />
+            </section>
 
-        {/* 4. 摂取タイムライン履歴 */}
-        <section>
-          <TimelineList
-            events={events}
-            onDeleteEvent={handleDeleteEvent}
-            onClearAll={handleClearAllEvents}
-            onSelectEventToEdit={(ev) => setEditingEvent(ev)}
-          />
-        </section>
+            <section>
+              <TimelineList
+                events={events}
+                onDeleteEvent={handleDeleteEvent}
+                onClearAll={handleClearAllEvents}
+                onSelectEventToEdit={(ev) => setEditingEvent(ev)}
+              />
+            </section>
+          </div>
+        </div>
       </main>
 
       {/* フッター（商標免責表記） */}
-      <footer className="border-t border-stone-200/80 bg-stone-100/60 py-4 px-4 text-center text-[10px] text-stone-500 space-y-1.5">
-        <p className="font-bold text-stone-700">CafeLimit — カフェイン動態・睡眠シミュレーター</p>
-        <p className="text-stone-400 max-w-xl mx-auto leading-relaxed">
+      <footer className="border-t border-stone-200/80 bg-stone-100/60 py-4 px-4 text-center text-[10px] text-stone-600 space-y-1.5">
+        <p className="font-semibold text-stone-700">CafeLimit — カフェイン動態・睡眠シミュレーター</p>
+        <p className="text-stone-600 max-w-xl mx-auto leading-relaxed">
           ※「ネスカフェ」「ゴールドブレンド」「バリスタ」はネスレ日本株式会社の登録商標です。
           ※「モンスターエナジー」はMonster Energy Companyの登録商標です。「レッドブル」はRed Bull GmbHの登録商標です。「ZONe」はサントリー食品インターナショナル株式会社の登録商標です。
           ※「コカ・コーラ」はThe Coca-Cola Companyの登録商標です。「ペプシ」はPepsiCo, Inc.の登録商標です。「ドクターペッパー」はKeurig Dr Pepper Inc.の登録商標です。
         </p>
-        <p className="text-stone-400">
+        <p className="text-stone-600">
           ※ 本アプリは個人開発の非公式シミュレーションツールであり、各権利者様公式とは一切関係ありません。
         </p>
       </footer>
@@ -380,6 +387,7 @@ export default function App() {
       <ScientificModal
         isOpen={showScientificModal}
         onClose={() => setShowScientificModal(false)}
+        bodyWeightKg={settings.bodyWeightKg ?? 60}
       />
     </div>
   );

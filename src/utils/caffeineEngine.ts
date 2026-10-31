@@ -43,30 +43,30 @@ export function evaluateSleepImpact(caffeineMg: number, safeThresholdMg: number 
   if (caffeineMg <= safeThresholdMg) {
     return {
       status: 'SAFE',
-      label: '快眠ゾーン（影響なし）',
+      label: '快眠ゾーン',
       color: '#10B981', // green-500
       bgColor: '#ECFDF5', // green-50
       borderColor: '#A7F3D0', // green-200
-      description: `就寝時のカフェイン残存が ${safeThresholdMg}mg 以下です。深い眠り（徐波睡眠）を守れます。`,
+      description: `就寝時のカフェイン残存が ${safeThresholdMg}mg 以下です。深い眠りを守れます。`,
     };
   }
   if (caffeineMg < cautionThreshold) {
     return {
       status: 'CAUTION',
-      label: '注意ゾーン（軽度影響）',
+      label: '注意ゾーン',
       color: '#F59E0B', // amber-500
       bgColor: '#FFFBEB', // amber-50
       borderColor: '#FDE68A', // amber-200
-      description: `入眠潜時の延長や中途覚醒のリスクがあります（安全上限: ${safeThresholdMg}mg）。`,
+      description: '入眠潜時の延長や中途覚醒のリスクがあります。',
     };
   }
   return {
     status: 'WARNING',
-    label: '警戒ゾーン（睡眠阻害）',
+    label: '警戒ゾーン',
     color: '#EF4444', // red-500
     bgColor: '#FEF2F2', // red-50
     borderColor: '#FECACA', // red-200
-    description: `アデノシン受容体がブロックされ、睡眠の質が大幅に低下する危険性が高い状態です（基準: ≥${cautionThreshold}mg）。`,
+    description: 'アデノシン受容体がブロックされ、睡眠の質が大幅に低下する危険性が高い状態です。',
   };
 }
 

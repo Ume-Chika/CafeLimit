@@ -97,34 +97,34 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const annotations: any = {};
 
-    // 快眠安全ライン（設定された閾値・文字は削除し点線のみ表示）
+    // 快眠安全ライン（設定された閾値・点線表示）
     annotations['safeLine'] = {
       type: 'line',
       yMin: safeSleepThresholdMg,
       yMax: safeSleepThresholdMg,
-      borderColor: 'rgba(16, 185, 129, 0.9)', // emerald-500
+      borderColor: 'rgba(22, 163, 74, 0.85)', // emerald-600
       borderWidth: 1.5,
       borderDash: [4, 4],
     };
 
-    // 警戒ライン（設定された閾値×2・鮮明な赤）
+    // 警戒ライン（設定された閾値×2・落ち着いた赤）
     annotations['warningLine'] = {
       type: 'line',
       yMin: safeSleepThresholdMg * 2,
       yMax: safeSleepThresholdMg * 2,
-      borderColor: 'rgba(220, 38, 38, 0.95)', // red-600
+      borderColor: 'rgba(220, 38, 38, 0.85)', // red-600
       borderWidth: 1.5,
       borderDash: [4, 4],
     };
 
-    // 日中の集中ゾーンライン（設定ON時・鮮烈なエレクトリックイエロー）
+    // 日中の集中ゾーンライン（設定ON時）
     if (showFocusZone) {
       annotations['focusLine'] = {
         type: 'line',
         yMin: focusThresholdMg,
         yMax: focusThresholdMg,
-        borderColor: 'rgba(234, 179, 8, 1.0)', // yellow-500 (純黄色)
-        borderWidth: 2,
+        borderColor: 'rgba(217, 119, 6, 0.9)', // amber-600
+        borderWidth: 1.5,
         borderDash: [5, 4],
       };
     }
@@ -146,15 +146,15 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
         type: 'line',
         xMin: closestCurIdx,
         xMax: closestCurIdx,
-        borderColor: 'rgba(59, 130, 246, 0.85)',
-        borderWidth: 2,
+        borderColor: 'rgba(180, 83, 9, 0.85)',
+        borderWidth: 1.5,
         label: {
           display: true,
           content: '現在',
           position: 'top',
-          backgroundColor: 'rgba(59, 130, 246, 0.9)',
+          backgroundColor: '#B45309',
           color: '#ffffff',
-          font: { size: 10, weight: 'bold' },
+          font: { size: 10, weight: '500' },
           padding: 3,
           borderRadius: 4,
         },
@@ -178,15 +178,15 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
         type: 'line',
         xMin: closestBedIdx,
         xMax: closestBedIdx,
-        borderColor: 'rgba(109, 40, 217, 0.85)',
-        borderWidth: 2,
+        borderColor: '#3E2718',
+        borderWidth: 1.5,
         label: {
           display: true,
           content: `就寝 (${format(bedTime, 'HH:mm')})`,
           position: 'top',
-          backgroundColor: 'rgba(109, 40, 217, 0.95)',
+          backgroundColor: '#3E2718',
           color: '#ffffff',
-          font: { size: 10, weight: 'bold' },
+          font: { size: 10, weight: '500' },
           padding: 3,
           borderRadius: 4,
         },
@@ -447,26 +447,26 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
   const isNearTop = selectedPointInfo ? selectedPointInfo.yPx < 110 : false;
 
   return (
-    <div className="bg-white rounded-3xl p-4 sm:p-5 shadow-xs border border-stone-200/90 space-y-2 relative">
+    <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-xs border border-stone-200/80 space-y-2 relative">
 
       <div className="flex flex-wrap items-center justify-between gap-1.5 pb-0.5">
         <div className="flex items-center space-x-1.5">
-          <Activity className="w-4 h-4 text-amber-800" />
-          <h3 className="text-xs font-black text-stone-900">体内カフェイン推移</h3>
+          <Activity className="w-4 h-4 text-amber-900" />
+          <h3 className="text-xs font-semibold text-stone-900">体内カフェイン推移</h3>
         </div>
-        <div className="flex items-center space-x-2 sm:space-x-2.5 text-[10px] font-bold">
+        <div className="flex items-center space-x-2 sm:space-x-3 text-[11px] font-medium font-mono tabular-nums">
           <span className="flex items-center space-x-1 text-emerald-700">
-            <span className="inline-block w-2.5 border-b-2 border-dashed border-emerald-500"></span>
-            <span>快眠 (&le;{safeSleepThresholdMg}mg)</span>
+            <span className="inline-block w-2.5 border-b-2 border-dashed border-emerald-600"></span>
+            <span>快眠 &le;{safeSleepThresholdMg}mg</span>
           </span>
-          <span className="flex items-center space-x-1 text-red-600 font-bold">
+          <span className="flex items-center space-x-1 text-red-600">
             <span className="inline-block w-2.5 border-b-2 border-dashed border-red-600"></span>
-            <span>警戒 (&ge;{safeSleepThresholdMg * 2}mg)</span>
+            <span>警戒 &ge;{safeSleepThresholdMg * 2}mg</span>
           </span>
           {showFocusZone && (
-            <span className="flex items-center space-x-1 text-yellow-600 font-black">
-              <span className="inline-block w-2.5 border-b-2 border-dashed border-yellow-500"></span>
-              <span>集中 (&ge;{focusThresholdMg}mg)</span>
+            <span className="flex items-center space-x-1 text-amber-700">
+              <span className="inline-block w-2.5 border-b-2 border-dashed border-amber-600"></span>
+              <span>集中 &ge;{focusThresholdMg}mg</span>
             </span>
           )}
         </div>
@@ -496,18 +496,16 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
       >
         <Line ref={chartRef} data={chartData} options={options} onClick={handleChartClick} />
 
-        {/* グラフ上の選択位置に確実に表示されるオレンジのハイライトピン（パルス波紋付き） */}
+        {/* グラフ上の選択位置に表示されるハイライトピン */}
         {selectedPointInfo && (
           <div
-            className="absolute rounded-full w-3.5 h-3.5 bg-amber-500 border-2 border-white shadow-md pointer-events-none z-20 transition-all duration-75 ease-out"
+            className="absolute rounded-full w-3.5 h-3.5 bg-amber-600 border-2 border-white shadow-xs pointer-events-none z-20 transition-all duration-75 ease-out"
             style={{
               left: `${selectedPointInfo.rawXPx}px`,
               top: `${selectedPointInfo.yPx}px`,
               transform: 'translate(-50%, -50%)',
             }}
-          >
-            <span className="absolute -inset-1 rounded-full bg-amber-400/40 animate-ping" />
-          </div>
+          />
         )}
 
         {/* グラフ内ピン留めインタラクティブ吹き出し（ドラッグ中リアルタイム追従 ＆ ボタン一体化 ＆ 先端オフセット補正） */}
@@ -560,25 +558,26 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
                     e.stopPropagation();
                     setSelectedPointInfo(null);
                   }}
-                  className="text-stone-400 hover:text-white p-0.5 rounded-full cursor-pointer"
+                  className="text-stone-400 hover:text-white p-1 rounded-md cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber-400"
+                  aria-label="吹き出しを閉じる"
                 >
-                  <X className="w-3 h-3" />
+                  <X className="w-3.5 h-3.5" />
                 </button>
               </div>
 
               {/* 残存カフェイン量 */}
               <div className="flex items-baseline justify-between pt-0.5">
-                <span className="text-[11px] text-stone-300">体内残存:</span>
-                <span className="font-mono font-black text-sm text-white">
+                <span className="text-xs text-stone-300">体内残存:</span>
+                <span className="font-mono font-bold text-sm text-white tabular-nums">
                   {selectedPointInfo.caffeineMg} <span className="text-[10px] font-normal text-stone-400">mg</span>
                 </span>
               </div>
 
               {/* 集中ゾーン（設定ON時かつfocusThresholdMg以上） */}
               {showFocusZone && selectedPointInfo.caffeineMg >= focusThresholdMg && (
-                <div className="bg-yellow-400/20 border border-yellow-400/50 rounded-lg px-2 py-0.5 text-[10px] text-yellow-300 font-bold flex items-center space-x-1">
-                  <Zap className="w-3 h-3 text-yellow-400 shrink-0" />
-                  <span>集中ブースト中 (&ge;{focusThresholdMg}mg)</span>
+                <div className="bg-amber-400/20 border border-amber-400/40 rounded-lg px-2 py-0.5 text-[10px] text-amber-200 font-medium flex items-center space-x-1">
+                  <Zap className="w-3 h-3 text-amber-300 shrink-0" />
+                  <span>集中ブースト中</span>
                 </div>
               )}
 
@@ -586,9 +585,9 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
               {selectedPointInfo.events && selectedPointInfo.events.length > 0 && (
                 <div className="space-y-1 pt-0.5">
                   {selectedPointInfo.events.length > 1 && (
-                    <div className="flex items-center justify-between text-[10px] text-amber-300 font-bold px-0.5">
+                    <div className="flex items-center justify-between text-[10px] text-amber-300 font-medium px-0.5">
                       <span>同時間帯 ({selectedPointInfo.events.length}件)</span>
-                      <span>
+                      <span className="font-mono tabular-nums">
                         合計 +{selectedPointInfo.events.reduce((sum, ev) => sum + ev.caffeineMg, 0)}mg
                       </span>
                     </div>
@@ -597,13 +596,13 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
                     {selectedPointInfo.events.map((ev) => (
                       <div
                         key={ev.id}
-                        className="bg-amber-950/60 border border-amber-800/40 rounded-lg p-1.5 flex items-center justify-between text-[11px] text-amber-200"
+                        className="bg-stone-800/80 border border-stone-700/60 rounded-lg p-2 flex items-center justify-between text-xs text-stone-200"
                       >
                         <div className="min-w-0 flex-1 pr-1.5">
-                          <div className="font-bold truncate text-[11px]">
-                            {ev.category === 'energy' ? '⚡' : ev.category === 'tea' ? '🍵' : ev.category === 'soda' ? '🥤' : '☕'} {ev.name}
+                          <div className="font-medium truncate text-xs text-white">
+                            {ev.name}
                           </div>
-                          <div className="text-[10px] text-amber-400 font-mono font-semibold">
+                          <div className="text-[10px] text-amber-300 font-mono tabular-nums">
                             +{ev.caffeineMg}mg
                           </div>
                         </div>
@@ -614,9 +613,10 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
                             onSelectEventToEdit(ev);
                             setSelectedPointInfo(null);
                           }}
-                          className="px-2 py-1 bg-amber-600 hover:bg-amber-500 active:scale-95 text-white font-bold text-[10px] rounded-lg shadow-xs transition-all shrink-0 cursor-pointer"
+                          className="px-2.5 py-1 bg-stone-700 hover:bg-stone-600 active:scale-98 text-white font-medium text-[11px] rounded-md transition-all shrink-0 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber-400"
+                          aria-label={`${ev.name} を編集`}
                         >
-                          ✏️ 編集
+                          編集
                         </button>
                       </div>
                     ))}
@@ -626,31 +626,21 @@ export const CaffeineChart: React.FC<CaffeineChartProps> = ({
 
               {/* アクションボタン */}
               <div className="pt-1">
-                {(!selectedPointInfo.events || selectedPointInfo.events.length === 0) ? (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleConfirmAddAtTime();
-                    }}
-                    className="w-full py-1.5 bg-sky-600 hover:bg-sky-500 active:scale-95 text-white font-black text-xs rounded-xl flex items-center justify-center space-x-1 shadow-xs transition-all cursor-pointer"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>この時間に追加</span>
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleConfirmAddAtTime();
-                    }}
-                    className="w-full py-1 bg-stone-800 hover:bg-stone-700 active:scale-95 text-stone-300 font-bold text-[10px] rounded-lg flex items-center justify-center space-x-1 transition-all cursor-pointer"
-                  >
-                    <Plus className="w-3 h-3" />
-                    <span>さらに追加</span>
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleConfirmAddAtTime();
+                  }}
+                  className="w-full py-2 bg-stone-800 hover:bg-stone-700 active:scale-98 text-stone-200 hover:text-white border border-stone-700/60 font-medium text-xs rounded-lg flex items-center justify-center space-x-1.5 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber-400"
+                >
+                  <Plus className="w-3.5 h-3.5 text-amber-400" />
+                  <span>
+                    {!selectedPointInfo.events || selectedPointInfo.events.length === 0
+                      ? 'この時間に追加'
+                      : 'さらに追加'}
+                  </span>
+                </button>
               </div>
             </div>
           </div>

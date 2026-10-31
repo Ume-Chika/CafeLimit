@@ -100,16 +100,16 @@ export const TimeSliderPicker: React.FC<TimeSliderPickerProps> = ({
   const dateSuffix = getDateLabel();
 
   return (
-    <div id="time-slider-section" className="bg-white rounded-3xl p-4 sm:p-5 border border-stone-200/90 shadow-xs space-y-3.5">
-      {/* 上段：時刻表示 ＆ 現在時刻バッジ（曜日なし・シンプルグルーピング） */}
+    <div id="time-slider-section" className="bg-white rounded-2xl p-4 sm:p-5 border border-stone-200/80 shadow-xs space-y-3.5">
+      {/* 上段：時刻表示 ＆ 現在時刻バッジ */}
       <div className="flex items-center justify-between">
-        {/* 摂取予定時刻（日付が今日以外なら横に(明日)/(昨日)を付与） */}
+        {/* 摂取予定時刻 */}
         <div className="flex items-center space-x-2.5">
-          <div className="w-8 h-8 rounded-xl bg-amber-100/80 text-amber-900 flex items-center justify-center shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-[#FAF7F2] text-[#3E2718] border border-stone-200/70 flex items-center justify-center shrink-0">
             <Clock className="w-4 h-4" />
           </div>
           <div>
-            <span className="text-[11px] font-bold text-stone-500 block">摂取予定時刻</span>
+            <span className="text-xs font-medium text-stone-500 block">摂取予定時刻</span>
             <div className="flex items-baseline space-x-1.5">
               {isDirectTimeInput ? (
                 <input
@@ -118,18 +118,18 @@ export const TimeSliderPicker: React.FC<TimeSliderPickerProps> = ({
                   defaultValue={format(selectedTime, 'HH:mm')}
                   onChange={handleDirectTimeChange}
                   onBlur={() => setIsDirectTimeInput(false)}
-                  className="text-2xl font-black font-mono tracking-tight text-stone-900 bg-stone-100 px-1 py-0.5 rounded-lg border border-amber-500 focus:outline-none"
+                  className="text-2xl font-bold font-mono tracking-tight tabular-nums text-stone-900 bg-stone-100 px-1 py-0.5 rounded-md border border-stone-300 focus:outline-none"
                 />
               ) : (
                 <button
                   type="button"
                   onClick={() => setIsDirectTimeInput(true)}
-                  className="text-2xl font-black font-mono tracking-tight text-stone-900 hover:text-amber-800 transition-colors cursor-pointer text-left flex items-baseline"
+                  className="text-2xl font-bold font-mono tracking-tight tabular-nums text-stone-900 hover:text-amber-900 transition-colors cursor-pointer text-left flex items-baseline"
                   title="タップして時刻を直接編集"
                 >
                   <span>{format(selectedTime, 'HH:mm')}</span>
                   {dateSuffix && (
-                    <span className="text-xs font-bold text-amber-800 ml-1.5 bg-amber-100/80 px-1.5 py-0.5 rounded-md">
+                    <span className="text-xs font-normal text-stone-600 ml-1.5 bg-stone-100 px-1.5 py-0.5 rounded">
                       {dateSuffix}
                     </span>
                   )}
@@ -139,34 +139,36 @@ export const TimeSliderPicker: React.FC<TimeSliderPickerProps> = ({
           </div>
         </div>
 
-        {/* 現在時刻バッジ：現在 03:22 */}
-        <div className="text-xs font-bold text-stone-600 bg-stone-100 px-3 py-1.5 rounded-full border border-stone-200/80 flex items-center space-x-1">
-          <span className="text-[10px] text-stone-600 font-semibold">現在</span>
-          <span className="font-mono text-stone-800 font-bold">{format(baseTime, 'HH:mm')}</span>
+        {/* 現在時刻バッジ */}
+        <div className="text-xs font-mono tabular-nums text-stone-600 bg-stone-100/80 px-2.5 py-1 rounded-md border border-stone-200/60 flex items-center space-x-1">
+          <span className="text-[10px] text-stone-600 font-medium">現在</span>
+          <span className="text-stone-800 font-semibold">{format(baseTime, 'HH:mm')}</span>
         </div>
       </div>
 
-      {/* 中段：3連シフトボタン（横幅いっぱいに3等分展開） */}
-      <div className="grid grid-cols-3 gap-1 bg-stone-100/90 p-1 rounded-2xl border border-stone-200/70 w-full">
+      {/* 中段：ネスカフェ風3連セグメントコントロール */}
+      <div className="grid grid-cols-3 gap-0.5 bg-stone-100/90 p-1 rounded-xl border border-stone-200/70 w-full">
         <button
           type="button"
           onClick={handleShiftBack1Hour}
-          className="flex items-center justify-center space-x-1 py-2 rounded-xl text-xs font-bold text-stone-700 hover:bg-white hover:shadow-xs active:scale-95 transition-all cursor-pointer"
-          title="1時間前へシフト（つまみ位置維持）"
+          className="flex items-center justify-center space-x-1 py-1.5 rounded-lg text-xs font-medium text-stone-700 hover:text-stone-900 hover:bg-white/80 active:scale-98 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3E2718]"
+          title="1時間前へシフト"
+          aria-label="1時間前へシフト"
         >
-          <ChevronLeft className="w-3.5 h-3.5 text-stone-500" />
+          <ChevronLeft className="w-3.5 h-3.5 text-stone-600" />
           <span>1h前</span>
         </button>
 
         <button
           type="button"
           onClick={handleResetToNow}
-          className={`flex items-center justify-center space-x-1 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+          className={`flex items-center justify-center space-x-1 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3E2718] ${
             isNow
-              ? 'bg-[#3E271E] text-white shadow-xs'
-              : 'text-stone-800 hover:bg-white hover:shadow-xs active:scale-95'
+              ? 'bg-[#3E2718] text-white shadow-xs'
+              : 'text-stone-700 hover:text-stone-900 hover:bg-white/80 active:scale-98'
           }`}
           title="現在時刻に合わせる"
+          aria-label="現在時刻に合わせる"
         >
           <RotateCcw className="w-3 h-3" />
           <span>現在時刻</span>
@@ -175,16 +177,17 @@ export const TimeSliderPicker: React.FC<TimeSliderPickerProps> = ({
         <button
           type="button"
           onClick={handleShiftForward1Hour}
-          className="flex items-center justify-center space-x-1 py-2 rounded-xl text-xs font-bold text-stone-700 hover:bg-white hover:shadow-xs active:scale-95 transition-all cursor-pointer"
-          title="1時間先へシフト（つまみ位置維持）"
+          className="flex items-center justify-center space-x-1 py-1.5 rounded-lg text-xs font-medium text-stone-700 hover:text-stone-900 hover:bg-white/80 active:scale-98 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3E2718]"
+          title="1時間先へシフト"
+          aria-label="1時間先へシフト"
         >
           <span>1h先</span>
-          <ChevronRight className="w-3.5 h-3.5 text-stone-500" />
+          <ChevronRight className="w-3.5 h-3.5 text-stone-600" />
         </button>
       </div>
 
       {/* 下段：-1h 〜 +1h 15分刻みスライダー（実時刻目盛り表示） */}
-      <div className="pt-1">
+      <div className="pt-0.5">
         <input
           type="range"
           min="-60"
@@ -192,13 +195,14 @@ export const TimeSliderPicker: React.FC<TimeSliderPickerProps> = ({
           step="15"
           value={sliderOffsetMinutes}
           onChange={handleSliderChange}
-          className="w-full h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-[#3E271E]"
+          aria-label="摂取時刻オフセットスライダー（-60分から+60分）"
+          className="w-full h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-[#3E2718] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3E2718]"
         />
         {/* 実時刻目盛り（-60m, -30m, 基準時, +30m, +60m） */}
-        <div className="flex justify-between text-[11px] font-mono font-bold text-stone-500 mt-1.5 px-0.5">
+        <div className="flex justify-between text-[11px] font-mono tabular-nums text-stone-500 mt-1.5 px-0.5">
           <span>{format(addMinutes(referenceTime, -60), 'HH:mm')}</span>
           <span className="text-stone-400">{format(addMinutes(referenceTime, -30), 'HH:mm')}</span>
-          <span className="text-[#3E271E] font-black text-xs bg-amber-100 px-1.5 py-0.5 rounded-md">
+          <span className="text-[#3E2718] font-semibold text-xs bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200/60">
             {format(referenceTime, 'HH:mm')}
           </span>
           <span className="text-stone-400">{format(addMinutes(referenceTime, 30), 'HH:mm')}</span>

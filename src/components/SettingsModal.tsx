@@ -65,33 +65,37 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3.5 sm:p-4 bg-stone-900/60 backdrop-blur-xs animate-fadeIn">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-stone-900/60 backdrop-blur-xs animate-fadeIn overscroll-contain"
+      onClick={onClose}
+    >
       <div
-        className="bg-white rounded-3xl shadow-xl border border-stone-200 w-full max-w-md max-h-[90vh] overflow-y-auto flex flex-col"
+        className="bg-white rounded-2xl shadow-xl border border-stone-200 w-full max-w-md max-h-[85dvh] flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* ヘッダー */}
-        <div className="p-4 border-b border-stone-100 flex items-center justify-between sticky top-0 bg-white/95 backdrop-blur-xs z-10">
+        {/* ヘッダー（常に固定表示・×ボタンが隠れない） */}
+        <div className="shrink-0 p-4 border-b border-stone-100 flex items-center justify-between bg-white z-10">
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-xl bg-stone-100 text-stone-700 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-[#FAF7F2] text-[#3E2718] border border-stone-200/70 flex items-center justify-center">
               <Settings className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-sm font-black text-stone-900">アプリ表示設定</h3>
+              <h3 className="text-sm font-semibold text-stone-900">アプリ表示設定</h3>
               <p className="text-[11px] text-stone-500">逆算インサイト・グラフ表示・データ管理</p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="w-7 h-7 rounded-full hover:bg-stone-100 text-stone-400 hover:text-stone-700 flex items-center justify-center cursor-pointer transition-colors"
+            className="w-7 h-7 rounded-md hover:bg-stone-100 text-stone-400 hover:text-stone-700 flex items-center justify-center cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3E2718]"
+            aria-label="閉じる"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* 設定フォーム */}
-        <div className="p-4 sm:p-5 space-y-4 text-xs">
+        {/* 設定フォーム（ここだけがスクロールする） */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 text-xs overscroll-contain">
           {/* 1. 「今飲める最大量」の表示単位（プルダウン統一） */}
           <div className="p-3 bg-stone-50/70 rounded-2xl border border-stone-200/80 space-y-1.5">
             <div className="flex items-center justify-between">
@@ -130,13 +134,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             >
               {presets.map((preset) => (
                 <option key={preset.id} value={preset.id}>
-                  {preset.name} ({preset.caffeineMg}mg)
+                  {preset.name} · {preset.caffeineMg}mg
                 </option>
               ))}
             </select>
           </div>
 
-          {/* 3. 日中の集中ゾーン表示（≥75mg / デフォルトOFF） */}
+          {/* 3. 日中の集中ゾーン表示（デフォルトOFF） */}
           <div className="p-3 bg-stone-50/70 rounded-2xl border border-stone-200/80 space-y-1">
             <div
               onClick={handleToggleFocusZone}
@@ -145,10 +149,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <div className="flex-1 min-w-0 pr-2 space-y-1">
                 <div className="flex items-center space-x-1.5 font-bold text-stone-900 text-xs">
                   <Zap className="w-4 h-4 text-amber-600 shrink-0" />
-                  <span>日中の集中ゾーン表示 (≥75mg)</span>
+                  <span>日中の集中ゾーン表示</span>
                 </div>
                 <p className="text-[10px] text-stone-500 leading-normal">
-                  グラフ上に集中・覚醒ゾーン（75mg以上）のハイライト帯を表示します。
+                  グラフ上に75mg以上の集中・覚醒ゾーンを表示します。
                 </p>
               </div>
               <div

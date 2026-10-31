@@ -204,7 +204,7 @@ const EditEventModalContent: React.FC<EditEventModalContentProps> = ({
             </button>
             <button
               type="submit"
-              className="flex-1 py-2.5 rounded-xl bg-amber-800 hover:bg-amber-900 text-white font-bold transition-all shadow-xs flex items-center justify-center space-x-1 cursor-pointer"
+              className="flex-1 py-2.5 rounded-xl bg-[#D8232A] hover:bg-[#C01E24] text-white font-semibold transition-all shadow-xs flex items-center justify-center space-x-1 cursor-pointer active:scale-98 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600"
             >
               <Check className="w-4 h-4" />
               <span>変更を保存</span>

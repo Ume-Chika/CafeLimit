@@ -34,23 +34,24 @@ export const ConfirmAddModal: React.FC<ConfirmAddModalProps> = ({
   const duration = preset.drinkingDurationMinutes || defaultDrinkingDuration;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-xs animate-fadeIn">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/50 backdrop-blur-xs animate-fadeIn">
       <div
-        className="bg-white rounded-3xl shadow-xl border border-stone-200 w-full max-w-sm overflow-hidden flex flex-col animate-scaleUp"
+        className="bg-white rounded-2xl shadow-xl border border-stone-200 w-full max-w-sm overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ヘッダー */}
-        <div className="p-4 border-b border-stone-100 flex items-center justify-between bg-stone-50/60">
+        <div className="px-4 py-3 border-b border-stone-100 flex items-center justify-between bg-stone-50/70">
           <div className="flex items-center space-x-2">
-            <div className="w-7 h-7 rounded-xl bg-amber-100 text-amber-900 flex items-center justify-center">
+            <div className="w-7 h-7 rounded-lg bg-[#FAF7F2] text-[#3E2718] border border-stone-200/70 flex items-center justify-center">
               <Plus className="w-4 h-4" />
             </div>
-            <h3 className="text-xs font-black text-stone-900">摂取記録の確認</h3>
+            <h3 className="text-xs font-semibold text-stone-900">摂取記録の確認</h3>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="w-7 h-7 rounded-full hover:bg-stone-200 text-stone-400 hover:text-stone-700 flex items-center justify-center cursor-pointer transition-colors"
+            className="w-7 h-7 rounded-md hover:bg-stone-200/60 text-stone-400 hover:text-stone-700 flex items-center justify-center cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3E2718]"
+            aria-label="閉じる"
           >
             <X className="w-4 h-4" />
           </button>
@@ -68,50 +69,50 @@ export const ConfirmAddModal: React.FC<ConfirmAddModalProps> = ({
           </div>
 
           <div>
-            <h4 className="text-sm font-black text-stone-900">{preset.name}</h4>
-            <div className="flex items-center justify-center space-x-1.5 mt-1">
+            <h4 className="text-sm font-bold text-stone-900">{preset.name}</h4>
+            <div className="flex items-center justify-center space-x-1.5 mt-1 text-xs font-mono tabular-nums text-stone-500">
               {preset.isNescafeNative && preset.powderGrams && (
-                <span className="text-[11px] font-bold text-stone-500">
+                <span className="bg-stone-100 px-1.5 py-0.5 rounded text-stone-600">
                   粉末 {preset.powderGrams}g
                 </span>
               )}
               {preset.volumeMl && (
-                <span className="text-[11px] font-bold text-stone-500">
+                <span className="bg-stone-100 px-1.5 py-0.5 rounded text-stone-600">
                   {preset.volumeMl}ml
                 </span>
               )}
-              <span className="text-xs font-black font-mono text-amber-900 bg-amber-100 px-2 py-0.5 rounded-lg border border-amber-200/60 whitespace-nowrap shrink-0">
+              <span className="font-semibold text-[#3E2718] bg-stone-100 px-2 py-0.5 rounded border border-stone-200/60">
                 +{preset.caffeineMg} mg
               </span>
             </div>
           </div>
 
           {/* 摂取予定時刻 & 飲用時間 */}
-          <div className="w-full bg-stone-50 border border-stone-200 rounded-2xl p-3 space-y-2 text-xs">
-            <div className="flex items-center justify-between px-1.5 text-stone-600 font-bold">
+          <div className="w-full bg-[#FAF7F2] border border-stone-200/70 rounded-xl p-3 space-y-2 text-xs">
+            <div className="flex items-center justify-between px-1 text-stone-600">
               <span className="flex items-center space-x-1.5">
                 <Clock className="w-3.5 h-3.5 text-stone-400" />
-                <span>摂取開始</span>
+                <span className="font-medium">摂取開始</span>
               </span>
-              <span className="font-mono font-black text-stone-900 text-xs">
+              <span className="font-mono font-bold text-stone-900 tabular-nums">
                 {getDateLabel()} {format(selectedTime, 'HH:mm')}
               </span>
             </div>
-            <div className="flex items-center justify-between px-1.5 text-stone-600 font-bold border-t border-stone-200/60 pt-2">
-              <span>飲む時間</span>
-              <span className="font-bold text-amber-900 bg-amber-100/80 px-2 py-0.5 rounded-lg text-[11px]">
+            <div className="flex items-center justify-between px-1 text-stone-600 border-t border-stone-200/60 pt-2">
+              <span className="font-medium">飲用ペース</span>
+              <span className="font-medium text-stone-700 bg-white px-2 py-0.5 rounded border border-stone-200/60 text-[11px]">
                 約 {formatDurationDisplay(duration)} かけて飲む
               </span>
             </div>
           </div>
         </div>
 
-        {/* ボタンフッター */}
-        <div className="p-4 bg-stone-50 border-t border-stone-100 grid grid-cols-2 gap-2.5">
+        {/* ボタンフッター：ネスカフェアプリ風の赤色CTA */}
+        <div className="p-4 bg-stone-50/70 border-t border-stone-100 grid grid-cols-2 gap-2.5">
           <button
             type="button"
             onClick={onClose}
-            className="py-2.5 rounded-xl border border-stone-300 hover:bg-stone-200/60 text-stone-700 font-bold text-xs active:scale-95 transition-all cursor-pointer"
+            className="py-2.5 rounded-xl border border-stone-200 hover:bg-stone-100 text-stone-700 font-medium text-xs active:scale-98 transition-all cursor-pointer"
           >
             キャンセル
           </button>
@@ -121,7 +122,7 @@ export const ConfirmAddModal: React.FC<ConfirmAddModalProps> = ({
               onConfirm();
               onClose();
             }}
-            className="py-2.5 rounded-xl bg-[#3E271E] hover:bg-stone-800 text-white font-black text-xs active:scale-95 shadow-xs transition-all flex items-center justify-center space-x-1 cursor-pointer"
+            className="py-2.5 rounded-xl bg-[#D8232A] hover:bg-[#C01E24] text-white font-semibold text-xs active:scale-98 shadow-xs transition-all flex items-center justify-center space-x-1 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600"
           >
             <Check className="w-4 h-4" />
             <span>記録を追加</span>
