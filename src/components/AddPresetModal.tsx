@@ -66,7 +66,7 @@ export const AddPresetModal: React.FC<AddPresetModalProps> = ({
       caffeineMg: Number(customCaffeineMg),
       color: customColor,
       isNescafeNative: customCategory === 'nescafe',
-      description: `カスタム (${customCaffeineMg}mg)`,
+      description: `カスタム · ${customCaffeineMg}mg`,
     };
 
     onAddPresetToList(newPreset);
@@ -174,13 +174,16 @@ export const AddPresetModal: React.FC<AddPresetModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3.5 sm:p-4 bg-stone-900/60 backdrop-blur-xs animate-fadeIn">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-stone-900/60 backdrop-blur-xs animate-fadeIn overscroll-contain"
+      onClick={handleClose}
+    >
       <div
-        className="bg-white rounded-3xl shadow-xl border border-stone-200 w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]"
+        className="bg-white rounded-2xl shadow-xl border border-stone-200 w-full max-w-lg max-h-[85dvh] flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* モーダルヘッダー */}
-        <div className="px-5 py-3.5 border-b border-stone-100 flex items-center justify-between bg-stone-50/70 sticky top-0 z-10">
+        <div className="shrink-0 px-4 sm:px-5 py-3.5 border-b border-stone-100 flex items-center justify-between bg-white z-10">
           <div className="flex items-center space-x-2">
             {(selectedGroup || isCustomMode) ? (
               <button
@@ -189,18 +192,18 @@ export const AddPresetModal: React.FC<AddPresetModalProps> = ({
                   setSelectedGroup(null);
                   setIsCustomMode(false);
                 }}
-                className="w-7 h-7 rounded-xl bg-stone-200 hover:bg-stone-300 text-stone-700 flex items-center justify-center transition-colors cursor-pointer mr-1"
+                className="w-8 h-8 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 flex items-center justify-center transition-colors cursor-pointer mr-1"
                 title="種類を選び直す"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
             ) : (
-              <div className="w-7 h-7 rounded-xl bg-[#3E271E] text-white flex items-center justify-center shadow-xs">
+              <div className="w-8 h-8 rounded-lg bg-[#3E2718] text-white flex items-center justify-center shadow-xs">
                 <Plus className="w-4 h-4" />
               </div>
             )}
             <div>
-              <h3 className="text-sm font-black text-stone-900">
+              <h3 className="text-sm font-semibold text-stone-900">
                 {isCustomMode
                   ? '自由指定ドリンクを登録'
                   : selectedGroup
@@ -219,14 +222,15 @@ export const AddPresetModal: React.FC<AddPresetModalProps> = ({
           <button
             type="button"
             onClick={handleClose}
-            className="w-7 h-7 rounded-full hover:bg-stone-100 text-stone-400 hover:text-stone-700 flex items-center justify-center transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-lg hover:bg-stone-100 text-stone-400 hover:text-stone-700 flex items-center justify-center cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3E2718]"
+            aria-label="閉じる"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* モーダル本文 */}
-        <div className="p-4 sm:p-5 overflow-y-auto max-h-[calc(90vh-70px)] text-xs">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 text-xs overscroll-contain">
           {/* Step 1: 種類選択 */}
           {!selectedGroup && !isCustomMode && (
             <div className="space-y-2.5">

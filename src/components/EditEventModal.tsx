@@ -80,33 +80,38 @@ const EditEventModalContent: React.FC<EditEventModalContentProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-stone-900/60 backdrop-blur-xs animate-fadeIn">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-stone-900/60 backdrop-blur-xs animate-fadeIn overscroll-contain"
+      onClick={onClose}
+    >
       <div
-        className="bg-white rounded-3xl shadow-xl border border-stone-200 w-full max-w-md max-h-[90vh] overflow-y-auto flex flex-col"
+        className="bg-white rounded-2xl shadow-xl border border-stone-200 w-full max-w-md max-h-[85dvh] flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ヘッダー */}
-        <div className="p-4 border-b border-stone-100 flex items-center justify-between bg-stone-50/60 sticky top-0 bg-white/95 backdrop-blur-xs z-10">
+        <div className="shrink-0 p-4 border-b border-stone-100 flex items-center justify-between bg-white z-10">
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-xl bg-amber-700 text-white flex items-center justify-center shadow-xs">
+            <div className="w-8 h-8 rounded-lg bg-[#FAF7F2] text-[#3E2718] border border-stone-200/70 flex items-center justify-center shadow-xs">
               <Coffee className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-sm font-black text-stone-900">摂取記録の編集</h3>
+              <h3 className="text-sm font-semibold text-stone-900">摂取記録の編集</h3>
               <p className="text-[11px] text-stone-500">{event.name}</p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="w-7 h-7 rounded-full hover:bg-stone-200 text-stone-400 hover:text-stone-700 flex items-center justify-center cursor-pointer"
+            className="w-8 h-8 rounded-lg hover:bg-stone-100 text-stone-400 hover:text-stone-700 flex items-center justify-center cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3E2718]"
+            aria-label="閉じる"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* フォーム */}
-        <form onSubmit={handleSave} className="p-4 sm:p-5 space-y-4 text-xs">
+        <form onSubmit={handleSave} className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 text-xs overscroll-contain">
           {/* 摂取時刻スライダー（メイン画面と完全統一） */}
           <div className="space-y-1">
             <TimeSliderPicker
@@ -192,12 +197,14 @@ const EditEventModalContent: React.FC<EditEventModalContentProps> = ({
             </label>
           </div>
 
-          {/* ボタンエリア */}
-          <div className="pt-2 flex items-center space-x-2">
+          </div>
+
+          {/* 固定フッター：ボタンエリア */}
+          <div className="shrink-0 p-4 border-t border-stone-100 bg-white flex items-center space-x-2 z-10">
             <button
               type="button"
               onClick={handleDelete}
-              className="px-3 py-2.5 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 font-bold transition-all flex items-center justify-center cursor-pointer"
+              className="px-3.5 py-2.5 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 font-bold transition-all flex items-center justify-center cursor-pointer"
               title="削除"
             >
               <Trash2 className="w-4 h-4" />

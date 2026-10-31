@@ -34,15 +34,18 @@ export const ConfirmAddModal: React.FC<ConfirmAddModalProps> = ({
   const duration = preset.drinkingDurationMinutes || defaultDrinkingDuration;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/50 backdrop-blur-xs animate-fadeIn">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-stone-900/60 backdrop-blur-xs animate-fadeIn overscroll-contain"
+      onClick={onClose}
+    >
       <div
-        className="bg-white rounded-2xl shadow-xl border border-stone-200 w-full max-w-sm overflow-hidden flex flex-col"
+        className="bg-white rounded-2xl shadow-xl border border-stone-200 w-full max-w-sm max-h-[85dvh] flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ヘッダー */}
-        <div className="px-4 py-3 border-b border-stone-100 flex items-center justify-between bg-stone-50/70">
+        <div className="shrink-0 px-4 py-3 border-b border-stone-100 flex items-center justify-between bg-white z-10">
           <div className="flex items-center space-x-2">
-            <div className="w-7 h-7 rounded-lg bg-[#FAF7F2] text-[#3E2718] border border-stone-200/70 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-[#FAF7F2] text-[#3E2718] border border-stone-200/70 flex items-center justify-center">
               <Plus className="w-4 h-4" />
             </div>
             <h3 className="text-xs font-semibold text-stone-900">摂取記録の確認</h3>
@@ -50,7 +53,7 @@ export const ConfirmAddModal: React.FC<ConfirmAddModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="w-7 h-7 rounded-md hover:bg-stone-200/60 text-stone-400 hover:text-stone-700 flex items-center justify-center cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3E2718]"
+            className="w-8 h-8 rounded-lg hover:bg-stone-100 text-stone-400 hover:text-stone-700 flex items-center justify-center cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3E2718]"
             aria-label="閉じる"
           >
             <X className="w-4 h-4" />
@@ -58,7 +61,7 @@ export const ConfirmAddModal: React.FC<ConfirmAddModalProps> = ({
         </div>
 
         {/* コンテンツ */}
-        <div className="p-5 flex flex-col items-center text-center space-y-3.5">
+        <div className="flex-1 overflow-y-auto p-5 flex flex-col items-center text-center space-y-3.5 overscroll-contain">
           {/* ドリンクグラフィック */}
           <div className="py-2 scale-110">
             <NescafeCoffeeCup
@@ -108,7 +111,7 @@ export const ConfirmAddModal: React.FC<ConfirmAddModalProps> = ({
         </div>
 
         {/* ボタンフッター：ネスカフェアプリ風の赤色CTA */}
-        <div className="p-4 bg-stone-50/70 border-t border-stone-100 grid grid-cols-2 gap-2.5">
+        <div className="shrink-0 p-4 bg-stone-50/70 border-t border-stone-100 grid grid-cols-2 gap-2.5 z-10">
           <button
             type="button"
             onClick={onClose}
